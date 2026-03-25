@@ -421,6 +421,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <button class="topbar-btn" onclick="showSummary()">📊 Bilan</button>
     <button class="topbar-btn" onclick="resetGame()">↺ Reset</button>
     <button class="topbar-btn" onclick="showScreen('home-screen')">⌂ Menu</button>
+    <div id="engine-badge" style="font-size:0.68rem;font-weight:700;letter-spacing:0.06em;padding:5px 11px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);color:var(--dimmer);white-space:nowrap;">⏳ Moteur…</div>
   </div>
   <div class="game-layout">
     <!-- LEFT -->
@@ -812,36 +813,50 @@ function sndTheory(){tone(660,0.12,'sine',0.14);tone(880,0.12,'sine',0.12,0.06);
 function toggleSound(){soundEnabled=!soundEnabled;document.getElementById('sound-fab').textContent=soundEnabled?'🔊':'🔇';}
 
 // ══════════════════════════════════════════════════════════
-// STOCKFISH 18 ENGINE
+// ══════════════════════════════════════════════════════════
+// STOCKFISH — CDN lichess (aucun fichier local, aucun WASM)
 // ══════════════════════════════════════════════════════════
 let stockfish=null;
 let sfReady=false;
 let sfCallback=null;
-let sfMultiPVCallback=null;
 let sfMultiPVLines=[];
-let sfBestMove=null;
 
 function initStockfish(){
-  try{
-    // Load Stockfish from same directory
-    stockfish=new Worker('stockfish-18-single.js');
-    stockfish.onmessage=function(e){
-      const line=typeof e==='string'?e:e.data;
-      handleSFMessage(line);
-    };
-    stockfish.onerror=function(err){
-      console.warn('Stockfish Worker error:',err);
-      sfReady=false;
-      document.getElementById('engine-status').textContent='⚠️ Stockfish indisponible — moteur fallback actif';
-    };
-    sfSend('uci');
-    sfSend('setoption name Hash value 64');
-    sfSend('setoption name Threads value 1');
-    sfSend('isready');
-  }catch(err){
-    console.warn('Stockfish init failed:',err);
-    document.getElementById('engine-status').textContent='⚠️ Stockfish indisponible — moteur fallback actif';
+  const el=document.getElementById('engine-status');
+  el.textContent='⏳ Chargement Stockfish…';
+  // On essaie d'abord le CDN lichess via Blob Worker
+  const CDNS=[
+    'https://lichess1.org/assets/_zCwggD/npm/stockfish.js',
+    'https://cdn.jsdelivr.net/npm/stockfish@16/src/stockfish.js'
+  ];
+  function tryLoad(idx){
+    if(idx>=CDNS.length){
+      el.textContent='⚡ Moteur Negamax actif (hors-ligne)';
+      el.style.color='var(--gold)';
+      const eb2=document.getElementById('engine-badge');
+      if(eb2){eb2.textContent='⚡ Negamax';eb2.style.background='rgba(201,162,39,0.1)';eb2.style.borderColor='rgba(201,162,39,0.25)';eb2.style.color='var(--gold)';}return;
+    }
+    try{
+      const blob=new Blob(['importScripts("'+CDNS[idx]+'");'],{type:'application/javascript'});
+      const w=new Worker(URL.createObjectURL(blob));
+      let gotUciOk=false;
+      const timeout=setTimeout(()=>{
+        if(!gotUciOk){w.terminate();tryLoad(idx+1);}
+      },6000);
+      w.onmessage=function(e){
+        const line=String(typeof e==='string'?e:(e.data||''));
+        if(line.includes('uciok')){gotUciOk=true;clearTimeout(timeout);}
+        handleSFMessage(line);
+      };
+      w.onerror=function(){clearTimeout(timeout);w.terminate();tryLoad(idx+1);};
+      stockfish=w;
+      sfSend('uci');
+      sfSend('setoption name Hash value 32');
+      sfSend('setoption name Threads value 1');
+      sfSend('isready');
+    }catch(e){tryLoad(idx+1);}
   }
+  tryLoad(0);
 }
 
 function sfSend(cmd){
@@ -854,35 +869,31 @@ function handleSFMessage(line){
     sfReady=true;
     document.getElementById('engine-status').textContent='✅ Stockfish 18 prêt — Elo 3500+';
     document.getElementById('engine-status').style.color='var(--green)';
+    const eb=document.getElementById('engine-badge');
+    if(eb){eb.textContent='⚡ Stockfish 18';eb.style.background='rgba(129,182,76,0.12)';eb.style.borderColor='rgba(129,182,76,0.3)';eb.style.color='var(--green)';}
   }
   if(line==='uciok'){sfSend('isready');}
 
-  // Parse info lines for MultiPV
+  // Parse info lines pour MultiPV
   if(line.startsWith('info')&&line.includes('score')&&line.includes('pv')){
     const pvMatch=line.match(/multipv (\d+)/);
     const pvNum=pvMatch?parseInt(pvMatch[1]):1;
     const scoreMatch=line.match(/score (cp|mate) (-?\d+)/);
     const pvMovesMatch=line.match(/ pv (.+)$/);
-    const depthMatch=line.match(/depth (\d+)/);
     if(scoreMatch&&pvMovesMatch){
       let score=0;
       if(scoreMatch[1]==='cp') score=parseInt(scoreMatch[2]);
       else if(scoreMatch[1]==='mate'){const m=parseInt(scoreMatch[2]);score=m>0?99000-m:-99000-m;}
       const pvMoves=pvMovesMatch[1].trim().split(' ');
-      const depth=depthMatch?parseInt(depthMatch[1]):0;
-      sfMultiPVLines[pvNum-1]={score,moves:pvMoves,depth};
-      if(sfMultiPVCallback)sfMultiPVCallback(sfMultiPVLines);
+      if(!sfMultiPVLines[pvNum-1]||Math.abs(score)>Math.abs(sfMultiPVLines[pvNum-1].score||0)){
+        sfMultiPVLines[pvNum-1]={score,moves:pvMoves};
+      }
     }
   }
-
   // bestmove
   if(line.startsWith('bestmove')){
-    const parts=line.split(' ');
-    sfBestMove=parts[1]||null;
-    if(sfCallback){
-      const cb=sfCallback;sfCallback=null;
-      cb(sfBestMove,sfMultiPVLines);
-    }
+    const best=line.split(' ')[1]||null;
+    if(sfCallback){const cb=sfCallback;sfCallback=null;cb(best,sfMultiPVLines);}
   }
 }
 
@@ -1300,31 +1311,36 @@ async function requestAI(move,ann,evalBefore,evalAfter){
   card.className='analysis-card';
   const badgeHtml=`<div class="ann-header"><div class="ann-symbol" style="background:${ann.bg};color:${ann.fg}">${ann.sym||'·'}</div><div><div class="ann-move-name">${move.san}</div><div class="ann-label">${ann.label}</div></div></div>`;
   body.innerHTML=badgeHtml+`<div class="thinking"><div class="dots"><span></span><span></span><span></span></div>&nbsp;Analyse…</div>`;
+
+  // Contexte de jeu : matériel, position du roi, pièces en prise
   const h=chess.history({verbose:true});
-  const op=detectOpening();
-  const opCtx=op?`Ouverture: ${op.name}${op.var?' — '+op.var:''}. `:'';
   const swing=((evalAfter-evalBefore)/100).toFixed(1);
-  const moveHistory=h.map(m=>m.san).join(' ');
-  const prompt=`Tu es un grand maître d'échecs commentateur. Donne un commentaire en 2 phrases max en français, précis et expert.
+  const moveNum=Math.ceil(h.length/2);
+  const phase=moveNum<=10?'début de partie':moveNum<=25?'milieu de jeu':'fin de partie';
+  const inCheck=chess.in_check()?'Le roi adverse est en échec. ':'';
+  const captured=move.captured?`capture d'un ${({p:'pion',n:'cavalier',b:'fou',r:'tour',q:'dame'}[move.captured]||'pièce')} `: '';
+  const isBlunder=ann===ANN.blunder||ann===ANN.miss;
+  const isGood=ann===ANN.brilliant||ann===ANN.good;
 
-FEN actuel: ${chess.fen()}
-Coups joués: ${moveHistory||'aucun'}
-Coup analysé: ${move.color==='w'?'Blancs':'Noirs'} jouent ${move.san} [${ann.label}]${chess.in_check()?' — ÉCHEC!':''}${move.captured?' — capture':''}${move.promotion?' — PROMOTION!':''}
-${opCtx}Variation d'évaluation: ${swing>0?'+':''}${swing} pions.
+  // Proxy Anthropic — uniquement analyse du jeu en cours, SANS parler de l'ouverture
+  const prompt=`Tu es un commentateur d'échecs. Analyse ce coup en 1-2 phrases en français.
+RÈGLES STRICTES: Ne mentionne JAMAIS l'ouverture, le nom d'une variante, ni la théorie. Commente uniquement ce qui se passe sur l'échiquier: tactiques, pièces menacées, structure de pions, sécurité du roi, avantage matériel, ou stratégie de milieu/fin de partie.
 
-Commence directement par ton analyse sans formule de politesse.`;
+Situation: coup ${moveNum}, ${phase}.
+Coup joué: ${move.color==='w'?'Blancs':'Noirs'} jouent ${move.san} — ${ann.label}. ${captured}${inCheck}
+Évaluation: ${swing>0?'+':''}${swing} pions (${isBlunder?'grave erreur':isGood?'bon coup':'coup correct'}).
+FEN: ${chess.fen()}
+
+Commence directement. 1-2 phrases max. Pas de "Bonjour", pas de nom d'ouverture.`;
 
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:200,
-        system:"Tu es un grand maître d'échecs commentateur français. Commentaires courts, précis, experts. 2 phrases max.",
-        messages:[{role:'user',content:prompt}]})
+    const res=await fetch('/api/ai',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt,includeImage:false})
     });
     if(!res.ok)throw new Error();
     const data=await res.json();
-    const txt=data.content&&data.content[0]?data.content[0].text.trim():'';
+    const txt=data.text?data.text.trim():'';
     if(!txt||txt.length<5)throw new Error();
     card.className='analysis-card has-result';
     body.innerHTML=badgeHtml+`<div class="analysis-body loaded">${txt.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
@@ -1336,16 +1352,27 @@ Commence directement par ton analyse sans formule de politesse.`;
 }
 
 function fallbackAnalysis(move,ann){
-  const op=detectOpening();const opStr=op?` ${op.tip||''}`:'';
   const p={p:'Le pion',n:'Le cavalier',b:'Le fou',r:'La tour',q:'La dame',k:'Le roi'};
   const piece=p[move.piece]||'La pièce';
-  if(move.promotion)return`Promotion sur ${move.to} ! Avantage décisif.`;
-  if(ann===ANN.theory)return`${piece} en ${move.to} — coup théorique.${opStr}`;
-  if(ann===ANN.brilliant)return`${piece} en ${move.to} — coup exceptionnel !`;
-  if(ann===ANN.blunder)return`${piece} en ${move.to} est une gaffe grave !`;
-  if(chess.in_check())return`${piece} en ${move.to} met le roi en échec !`;
-  if(move.captured)return`${piece} capture en ${move.to}.`;
-  return`${piece} en ${move.to}. Position solide.`;
+  const color=move.color==='w'?'Blancs':'Noirs';
+  if(chess.in_checkmate())return`${piece} en ${move.to} — les ${color} donnent échec et mat !`;
+  if(move.promotion)return`Promotion en Dame sur ${move.to} ! Avantage matériel décisif.`;
+  if(ann===ANN.castle)return`Roque effectué — le roi est en sécurité derrière ses pions.`;
+  if(ann===ANN.brilliant)return`${piece} en ${move.to} — coup remarquable ! L'adversaire devra répondre précisément.`;
+  if(ann===ANN.good)return`${piece} en ${move.to} améliore la position des ${color}.`;
+  if(ann===ANN.blunder){
+    const cap=move.captured?`Prise de la ${p[move.captured]||'pièce'} non défendue. `:'';
+    return`${cap}Grave erreur ! Cette case crée une faiblesse majeure.`;
+  }
+  if(ann===ANN.mistake)return`${piece} en ${move.to} cède un avantage — une meilleure case existait.`;
+  if(ann===ANN.inaccurate)return`${piece} en ${move.to} est légèrement imprécis. La position reste défendable.`;
+  if(chess.in_check())return`${piece} en ${move.to} donne échec ! Le roi doit répondre immédiatement.`;
+  if(move.captured)return`${piece} capture en ${move.to}. L'avantage matériel évolue.`;
+  // Contextual fallbacks based on piece type
+  if(move.piece==='k')return`Le roi avance en ${move.to}. Attention à la sécurité royale.`;
+  if(move.piece==='q')return`La dame se centralise en ${move.to} — pression sur la position adverse.`;
+  if(move.piece==='r')return`La tour s'active en ${move.to}. Contrôle de la colonne ouvert.`;
+  return`${piece} en ${move.to}. Position stable — les ${color} consolident.`;
 }
 
 // ══════════════════════════════════════════════════════════
