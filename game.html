@@ -824,41 +824,34 @@ let sfMultiPVLines=[];
 function initStockfish(){
   const el=document.getElementById('engine-status');
   el.textContent='⏳ Chargement Stockfish…';
-  // On essaie d'abord le CDN lichess via Blob Worker
-  const CDNS=[
-    'https://lichess1.org/assets/_zCwggD/npm/stockfish.js',
-    'https://cdn.jsdelivr.net/npm/stockfish@16/src/stockfish.js'
-  ];
-  function tryLoad(idx){
-    if(idx>=CDNS.length){
-      el.textContent='⚡ Moteur Negamax actif (hors-ligne)';
-      el.style.color='var(--gold)';
-      const eb2=document.getElementById('engine-badge');
-      if(eb2){eb2.textContent='⚡ Negamax';eb2.style.background='rgba(201,162,39,0.1)';eb2.style.borderColor='rgba(201,162,39,0.25)';eb2.style.color='var(--gold)';}return;
-    }
-    try{
-      const blob=new Blob(['importScripts("'+CDNS[idx]+'");'],{type:'application/javascript'});
-      const w=new Worker(URL.createObjectURL(blob));
-      let gotUciOk=false;
-      const timeout=setTimeout(()=>{
-        if(!gotUciOk){w.terminate();tryLoad(idx+1);}
-      },6000);
-      w.onmessage=function(e){
-        const line=String(typeof e==='string'?e:(e.data||''));
-        if(line.includes('uciok')){gotUciOk=true;clearTimeout(timeout);}
-        handleSFMessage(line);
-      };
-      w.onerror=function(){clearTimeout(timeout);w.terminate();tryLoad(idx+1);};
-      stockfish=w;
-      sfSend('uci');
-      sfSend('setoption name Hash value 32');
-      sfSend('setoption name Threads value 1');
-      sfSend('isready');
-    }catch(e){tryLoad(idx+1);}
-  }
-  tryLoad(0);
-}
 
+  function useFallback(){
+    stockfish=null;sfReady=false;
+    el.textContent='⚡ Moteur Negamax actif';
+    el.style.color='var(--gold)';
+    const eb=document.getElementById('engine-badge');
+    if(eb){eb.textContent='⚡ Negamax';eb.style.background='rgba(201,162,39,0.1)';eb.style.borderColor='rgba(201,162,39,0.25)';eb.style.color='var(--gold)';}
+  }
+
+  // stockfish.js doit être à la racine du repo GitHub (même origine = pas de CORS)
+  // Télécharge la release depuis: https://github.com/nmrugg/stockfish.js/releases
+  try{
+    const w=new Worker('stockfish.js');
+    let gotReady=false;
+    const timeout=setTimeout(()=>{if(!gotReady){w.terminate();useFallback();}},8000);
+    w.onmessage=function(e){
+      const line=String(typeof e==='string'?e:(e.data||''));
+      if(line==='readyok'){gotReady=true;clearTimeout(timeout);}
+      handleSFMessage(line);
+    };
+    w.onerror=function(){clearTimeout(timeout);w.terminate();useFallback();};
+    stockfish=w;
+    sfSend('uci');
+    sfSend('setoption name Hash value 32');
+    sfSend('setoption name Threads value 1');
+    sfSend('isready');
+  }catch(e){useFallback();}
+}
 function sfSend(cmd){
   if(stockfish)try{stockfish.postMessage(cmd);}catch(e){}
 }
