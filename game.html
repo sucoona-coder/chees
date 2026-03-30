@@ -830,9 +830,9 @@ let sfGameCallback=null, sfGameLines=[];
 let sfAnal=null, sfAnalReady=false;
 let sfAnalCallback=null, sfAnalLines=[];
 
-function createWorker(onReady, onMsg, onFail){
+function createWorker(filename, onReady, onMsg, onFail){
   try{
-    const w=new Worker('stockfish.js');
+    const w=new Worker(filename);
     let ready=false;
     const t=setTimeout(()=>{if(!ready){w.terminate();onFail();}},8000);
     w.onmessage=function(e){
@@ -852,30 +852,30 @@ function createWorker(onReady, onMsg, onFail){
 function initStockfish(){
   const el=document.getElementById('engine-status');
   const eb=document.getElementById('engine-badge');
-  el.textContent='⏳ Chargement Stockfish (×2)…';
+  el.textContent='⏳ Chargement stockfish.js + stockfish1.js…';
 
   let gameOk=false, analOk=false;
   function checkBothReady(){
     if(gameOk&&analOk){
-      el.textContent='✅ Stockfish prêt — Jeu + Analyse';
+      el.textContent='✅ stockfish.js (jeu) + stockfish1.js (analyse) prêts';
       el.style.color='var(--green)';
-      if(eb){eb.textContent='⚡ Stockfish ×2';eb.style.background='rgba(129,182,76,0.12)';eb.style.borderColor='rgba(129,182,76,0.3)';eb.style.color='var(--green)';}
+      if(eb){eb.textContent='⚡ SF Jeu + SF Analyse ✓';eb.style.background='rgba(129,182,76,0.12)';eb.style.borderColor='rgba(129,182,76,0.3)';eb.style.color='var(--green)';}
     }
   }
   function fallback(){
     el.textContent='⚡ Negamax actif';el.style.color='var(--gold)';
-    if(eb){eb.textContent='⚡ Negamax';eb.style.background='rgba(201,162,39,0.1)';eb.style.borderColor='rgba(201,162,39,0.25)';eb.style.color='var(--gold)';}
+    if(eb){eb.textContent='⚡ Negamax (SF indispo)';eb.style.background='rgba(201,162,39,0.1)';eb.style.borderColor='rgba(201,162,39,0.25)';eb.style.color='var(--gold)';}
   }
 
-  // Worker JEU
-  sfGame=createWorker(
+  // Worker JEU → stockfish.js
+  sfGame=createWorker('stockfish.js',
     (w)=>{ sfGameReady=true; gameOk=true; checkBothReady(); },
     (line)=>handleSFGameMsg(line),
     ()=>{ sfGame=null; sfGameReady=false; fallback(); }
   );
 
-  // Worker ANALYSE (léger, juste évaluation)
-  sfAnal=createWorker(
+  // Worker ANALYSE → stockfish1.js (même fichier, instances séparées)
+  sfAnal=createWorker('stockfish1.js',
     (w)=>{ sfAnalReady=true; analOk=true; checkBothReady(); },
     (line)=>handleSFAnalMsg(line),
     ()=>{ sfAnal=null; sfAnalReady=false; }
@@ -1339,15 +1339,16 @@ function drawEvalGraph(canvasId,history){
 // ══════════════════════════════════════════════════════════
 let aiRunning=false;
 
-// Évalue un FEN via Worker ANALYSE (rapide, 200ms)
-function sfEval(fen, movetime=200){
+// Évalue un FEN via Worker ANALYSE
+// Utilise go nodes 1500000 comme Lichess — résultat cohérent peu importe le CPU
+function sfEval(fen, nodes=800000){
   return new Promise(resolve=>{
     if(!sfAnalReady||!sfAnal){ resolve(null); return; }
     sfAnalLines=[];
     sfAnalCallback=(score)=>resolve(score);
     sfAnalSend('setoption name MultiPV value 1');
     sfAnalSend(`position fen ${fen}`);
-    sfAnalSend(`go movetime ${movetime}`);
+    sfAnalSend(`go nodes ${nodes}`);
   });
 }
 
@@ -1374,8 +1375,8 @@ async function requestAI(move,ann,evalBefore,evalAfter){
       const moves=hist.slice(0,-1);
       moves.forEach(m=>tmpBefore.move(m));
       [sfBefore, sfAfter] = await Promise.all([
-        sfEval(tmpBefore.fen(), 400),
-        sfEval(chess.fen(), 400)
+        sfEval(tmpBefore.fen(), 400000),
+        sfEval(chess.fen(), 400000)
       ]);
     }
   }
