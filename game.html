@@ -830,9 +830,9 @@ let sfGameCallback=null, sfGameLines=[];
 let sfAnal=null, sfAnalReady=false;
 let sfAnalCallback=null, sfAnalLines=[];
 
-function createWorker(filename, onReady, onMsg, onFail){
+function createWorker(onReady, onMsg, onFail){
   try{
-    const w=new Worker(filename);
+    const w=new Worker('stockfish.js');
     let ready=false;
     const t=setTimeout(()=>{if(!ready){w.terminate();onFail();}},8000);
     w.onmessage=function(e){
@@ -852,30 +852,30 @@ function createWorker(filename, onReady, onMsg, onFail){
 function initStockfish(){
   const el=document.getElementById('engine-status');
   const eb=document.getElementById('engine-badge');
-  el.textContent='⏳ Chargement stockfish.js + stockfish1.js…';
+  el.textContent='⏳ Chargement Stockfish (×2)…';
 
   let gameOk=false, analOk=false;
   function checkBothReady(){
     if(gameOk&&analOk){
-      el.textContent='✅ stockfish.js (jeu) + stockfish1.js (analyse) prêts';
+      el.textContent='✅ Stockfish prêt — Jeu + Analyse';
       el.style.color='var(--green)';
-      if(eb){eb.textContent='⚡ SF Jeu + SF Analyse ✓';eb.style.background='rgba(129,182,76,0.12)';eb.style.borderColor='rgba(129,182,76,0.3)';eb.style.color='var(--green)';}
+      if(eb){eb.textContent='⚡ Stockfish ×2';eb.style.background='rgba(129,182,76,0.12)';eb.style.borderColor='rgba(129,182,76,0.3)';eb.style.color='var(--green)';}
     }
   }
   function fallback(){
     el.textContent='⚡ Negamax actif';el.style.color='var(--gold)';
-    if(eb){eb.textContent='⚡ Negamax (SF indispo)';eb.style.background='rgba(201,162,39,0.1)';eb.style.borderColor='rgba(201,162,39,0.25)';eb.style.color='var(--gold)';}
+    if(eb){eb.textContent='⚡ Negamax';eb.style.background='rgba(201,162,39,0.1)';eb.style.borderColor='rgba(201,162,39,0.25)';eb.style.color='var(--gold)';}
   }
 
-  // Worker JEU → stockfish.js
-  sfGame=createWorker('stockfish.js',
+  // Worker JEU
+  sfGame=createWorker(
     (w)=>{ sfGameReady=true; gameOk=true; checkBothReady(); },
     (line)=>handleSFGameMsg(line),
     ()=>{ sfGame=null; sfGameReady=false; fallback(); }
   );
 
-  // Worker ANALYSE → stockfish1.js (même fichier, instances séparées)
-  sfAnal=createWorker('stockfish1.js',
+  // Worker ANALYSE (léger, juste évaluation)
+  sfAnal=createWorker(
     (w)=>{ sfAnalReady=true; analOk=true; checkBothReady(); },
     (line)=>handleSFAnalMsg(line),
     ()=>{ sfAnal=null; sfAnalReady=false; }
@@ -1338,22 +1338,35 @@ function drawEvalGraph(canvasId,history){
 // ANALYSE — 100% basée sur Stockfish (éval réelle avant/après)
 // ══════════════════════════════════════════════════════════
 let aiRunning=false;
+let analRequestId=0; // Identifiant unique par coup pour éviter les résultats périmés
 
-// Évalue un FEN via Worker ANALYSE
-// Utilise go nodes 1500000 comme Lichess — résultat cohérent peu importe le CPU
-function sfEval(fen, nodes=800000){
+// Évalue un FEN via Worker ANALYSE (rapide, 150ms)
+function sfEval(fen, movetime=150){
   return new Promise(resolve=>{
     if(!sfAnalReady||!sfAnal){ resolve(null); return; }
     sfAnalLines=[];
     sfAnalCallback=(score)=>resolve(score);
     sfAnalSend('setoption name MultiPV value 1');
     sfAnalSend(`position fen ${fen}`);
-    sfAnalSend(`go nodes ${nodes}`);
+    sfAnalSend(`go movetime ${movetime}`);
   });
 }
 
+// Annule l'analyse en cours immédiatement
+function cancelAnalysis(){
+  if(sfAnal&&sfAnalReady){
+    try{ sfAnal.postMessage('stop'); }catch(e){}
+  }
+  sfAnalCallback=null; // Ignore le résultat qui arrivera
+  aiRunning=false;
+}
+
 async function requestAI(move,ann,evalBefore,evalAfter){
-  if(aiRunning)return; aiRunning=true;
+  // Annule toute analyse précédente en cours
+  cancelAnalysis();
+  aiRunning=true;
+  const myId=++analRequestId; // Identifiant de cette demande d'analyse
+
   const card=document.getElementById('analysis-card');
   const body=document.getElementById('analysis-body');
   card.className='analysis-card';
@@ -1364,20 +1377,19 @@ async function requestAI(move,ann,evalBefore,evalAfter){
   // Évaluation Stockfish réelle sur la position AVANT et APRÈS le coup
   let sfBefore=null, sfAfter=null;
   if(sfAnalReady){
-    // Position avant le coup : on la reconstruit en annulant
-    const tmp=new Chess(chess.fen());
-    // Position après = chess.fen() actuel
-    // Position avant = FEN avant ce coup (on l'a dans evalHistory)
     const hist=chess.history({verbose:true});
     if(hist.length>=1){
       // Recréer la position avant le dernier coup
       const tmpBefore=new Chess();
       const moves=hist.slice(0,-1);
       moves.forEach(m=>tmpBefore.move(m));
-      [sfBefore, sfAfter] = await Promise.all([
-        sfEval(tmpBefore.fen(), 400000),
-        sfEval(chess.fen(), 400000)
-      ]);
+      // Évaluer les deux positions séquentiellement (pas en parallèle car même worker)
+      sfBefore = await sfEval(tmpBefore.fen(), 150);
+      // Vérifier si une analyse plus récente a été demandée
+      if(myId !== analRequestId){ return; }
+      sfAfter = await sfEval(chess.fen(), 150);
+      // Vérifier à nouveau avant d'afficher
+      if(myId !== analRequestId){ return; }
     }
   }
 
@@ -1385,10 +1397,7 @@ async function requestAI(move,ann,evalBefore,evalAfter){
   const sign=move.color==='w'?1:-1;
   let realDelta=null;
   if(sfBefore!==null && sfAfter!==null){
-    // sfBefore = eval depuis le point de vue du joueur qui venait de jouer (avant son coup)
-    // sfAfter = eval depuis le point de vue de l'adversaire (après le coup)
-    realDelta = (sfAfter * -1 - sfBefore * sign); // normalise
-    // Recalcule l'annotation avec le vrai delta Stockfish
+    realDelta = (sfAfter * -1 - sfBefore * sign);
     const realDeltaNorm = sfAfter * sign * -1 - sfBefore;
     if(!chess.in_checkmate()&&!move.promotion&&!(move.san&&move.san.includes('O-O'))){
       if(realDeltaNorm >= 200) ann=ANN.brilliant;
