@@ -1313,139 +1313,76 @@ async function requestAI(move, ann, evalBefore, evalAfter){
   const body=document.getElementById('analysis-body');
   card.className='analysis-card';
 
+  // Affichage immédiat "en cours"
   const loadingBadge=`<div class="ann-header"><div class="ann-symbol" style="background:${ann.bg};color:${ann.fg}">${ann.sym||'·'}</div><div><div class="ann-move-name">${move.san}</div><div class="ann-label">${ann.label}</div></div></div>`;
   body.innerHTML=loadingBadge+`<div class="thinking"><div class="dots"><span></span><span></span><span></span></div>&nbsp;Stockfish analyse…</div>`;
 
   if(!sfAnalReady){
+    // Fallback sans Stockfish
     card.className='analysis-card has-result';
     body.innerHTML=loadingBadge+`<div class="analysis-body loaded">${getMoveContext(move,ann,0,0,null)}</div>`;
     aiRunning=false; return;
   }
 
-  // ── Reconstruction des positions ─────────────────────────
+  // Reconstruit la position AVANT le coup
   const hist=chess.history({verbose:true});
-  // Position AVANT le coup joué
   const fenBefore=(()=>{
     const t=new Chess();
     hist.slice(0,-1).forEach(m=>t.move(m));
     return t.fen();
   })();
-  // Position APRÈS le coup joué (état actuel)
   const fenAfter=chess.fen();
   const isWhite=move.color==='w';
-  const uciMove=moveToUci(move);
-
-  // ══════════════════════════════════════════════════════
-  // MÉTHODE CORRECTE (Lichess/Chess.com) :
-  //
-  //  bestCp  = eval de fenBefore (Stockfish joue son meilleur coup)
-  //            → c'est l'eval "optimale" de la position pour le joueur actif
-  //
-  //  playedCp = eval de fenAfter VU PAR L'ADVERSAIRE (car après le coup,
-  //             c'est l'adversaire qui joue) → on inverse le signe
-  //
-  //  diff = bestCp - playedCp (du point de vue joueur actif)
-  //
-  // POURQUOI ÇA MARCHE :
-  //  - sfEval(fenBefore) = ce que Stockfish pense de la position si le meilleur
-  //    coup est joué (du point de vue Blanc)
-  //  - sfEval(fenAfter) = eval après le coup joué, du point de vue Blanc.
-  //    Mais maintenant c'est l'adversaire qui joue → pour le joueur actif,
-  //    un bon résultat = -sfEval(fenAfter) si Noir, +sfEval(fenAfter) si Blanc
-  //
-  // EXEMPLE Nc6 (Noirs jouent) :
-  //  fenBefore: Stockfish dit +1.2 (avantage Blanc)
-  //  → bestCp pour les Noirs = -1.2 × -1 = ... non !
-  //
-  // EN FAIT la bonne formule est :
-  //  bestCp  = isWhite ?  sfBefore : -sfBefore
-  //  playedCp = isWhite ?  sfAfter  : -sfAfter
-  //
-  //  MAIS sfBefore ≠ eval du meilleur coup — c'est l'eval de la position
-  //  → Stockfish retourne en fait l'eval APRÈS son meilleur coup interne
-  //  → donc sfBefore EST bien l'eval du meilleur coup possible
-  //  → et sfAfter est l'eval après le coup joué (vu par l'adversaire)
-  //  → donc playedCp (du point de vue du joueur actif) = -(sfAfter inversé)
-  //     = isWhite ? sfAfter : -sfAfter  ✓
-  // ══════════════════════════════════════════════════════
 
   // ── PASSE 1 : RAPIDE (200ms) ─────────────────────────────
-  //
-  // ⚠️ IMPORTANT — Convention Stockfish UCI :
-  // Le score "info score cp X" est TOUJOURS du point de vue
-  // du joueur qui vient de recevoir la position (joueur actif).
-  // Positif = avantage pour le joueur actif, quelle que soit la couleur.
-  //
-  // sfEval(fenBefore) = ce que Stockfish obtient avec son meilleur coup
-  //   → score positif = bon pour le joueur actif AVANT le coup
-  //   → c'est le score du MEILLEUR coup possible
-  //
-  // sfEval(fenAfter) = éval de la position APRÈS le coup joué
-  //   → maintenant c'est l'adversaire qui joue dans fenAfter
-  //   → score positif dans fenAfter = bon pour l'ADVERSAIRE
-  //   → donc pour le joueur actif : playedCp = -sfAfter
-  //
-  // EXEMPLE Nc6 (Noirs jouent, position légèrement favorable aux Blancs) :
-  //   sfBefore = +50  (Stockfish dit +0.5 pour le joueur actif = les Noirs → bonne position)
-  //   sfAfter  = +60  (après Nc6, c'est aux Blancs → +0.6 pour les Blancs)
-  //   bestCp   = +50
-  //   playedCp = -60  ... NON, ce n'est pas ça non plus
-  //
-  // LA VRAIE VÉRITÉ :
-  // Stockfish UCI retourne le score du CÔTÉ QUI VIENT D'ÊTRE ANALYSÉ.
-  // "go movetime X" depuis fenBefore (tour aux Noirs) → score du point de vue Noirs
-  // "go movetime X" depuis fenAfter (tour aux Blancs) → score du point de vue Blancs
-  //
-  // Pour comparer les deux, il faut les ramener au même référentiel :
-  // Le joueur actif (celui qui vient de jouer) = les Noirs dans notre exemple
-  //   bestCp   = sfBefore  (déjà du point de vue Noirs ✓)
-  //   playedCp = -sfAfter  (sfAfter est du point de vue Blancs, on inverse pour les Noirs)
-  //
-  // En général :
-  //   bestCp   = sfBefore  (point de vue joueur actif, pas besoin d'inverser)
-  //   playedCp = -sfAfter  (sfAfter est du point de vue adversaire → on inverse)
-
-  const sfBefore1=await sfEval(fenBefore, 200);
+  // Évalue position AVANT (pour trouver eval du meilleur coup)
+  const cpBefore1=await sfEval(fenBefore, 200);
   if(myId!==analRequestId){ return; }
-  const sfAfter1=await sfEval(fenAfter, 200);
+  // Évalue position APRÈS (pour trouver eval du coup joué)
+  const cpAfter1=await sfEval(fenAfter, 200);
   if(myId!==analRequestId){ return; }
 
-  // bestCp  = sfBefore : score du joueur actif avec le meilleur coup
-  // playedCp = -sfAfter : score du joueur actif après son coup (inversé car c'est l'adversaire qui joue dans fenAfter)
-  const bestCp1   = sfBefore1;
-  const playedCp1 = -sfAfter1;
-  const diff1     = Math.max(0, bestCp1 - playedCp1);
+  // Calcul diff passe-1
+  // cpBefore est l'eval du meilleur coup possible (du point de vue du joueur actif)
+  // cpAfter est l'eval après le coup joué (du point de vue du joueur actif — on inverse car c'est maintenant l'adversaire)
+  const bestCp1 = isWhite ?  cpBefore1 : -cpBefore1;
+  const playedCp1 = isWhite ? cpAfter1 : -cpAfter1;
+  const diff1 = Math.max(0, bestCp1 - playedCp1);
 
-  const ann1=classifyByCpDiff(diff1, move, moveNum, sfAfter1);
-  const winB1=cpToWin(bestCp1);
-  const winA1=cpToWin(playedCp1);
-  const acc1=winToAccuracy(winB1, winA1);
+  const ann1 = classifyByCpDiff(diff1, move, moveNum, cpAfter1);
+  const winB1 = cpToWin(bestCp1);
+  const winA1 = cpToWin(playedCp1);
+  const acc1  = winToAccuracy(winB1, winA1);
 
-  // Affichage immédiat passe 1
-  renderAnalysis(card, body, move, ann1, sfAfter1, diff1, acc1, false);
+  // Affiche le résultat passe-1 immédiatement
+  renderAnalysis(card, body, move, ann1, cpAfter1, diff1, acc1, false);
   if(myId!==analRequestId){ return; }
 
-  // ── PASSE 2 : PROFONDE (600ms) ───────────────────────────
-  await new Promise(r=>{ analPendingUpdate=setTimeout(r,300); });
+  // ── PASSE 2 : PROFONDE (800ms, corrigée) ─────────────────
+  // Attend un court délai avant de lancer (laisse respirer le worker)
+  await new Promise(r=>{ analPendingUpdate=setTimeout(r, 300); });
   if(myId!==analRequestId){ return; }
 
-  const sfBefore2=await sfEval(fenBefore, 600);
+  const cpBefore2=await sfEval(fenBefore, 800);
   if(myId!==analRequestId){ return; }
-  const sfAfter2=await sfEval(fenAfter, 600);
+  const cpAfter2=await sfEval(fenAfter, 800);
   if(myId!==analRequestId){ return; }
 
-  const bestCp2   = sfBefore2;
-  const playedCp2 = -sfAfter2;
-  const diff2=Math.max(0, bestCp2 - playedCp2);
+  const bestCp2 = isWhite ?  cpBefore2 : -cpBefore2;
+  const playedCp2 = isWhite ? cpAfter2 : -cpAfter2;
+  const diff2 = Math.max(0, bestCp2 - playedCp2);
 
-  const ann2=classifyByCpDiff(diff2, move, moveNum, sfAfter2);
-  const winB2=cpToWin(bestCp2);
-  const winA2=cpToWin(playedCp2);
-  const acc2=winToAccuracy(winB2, winA2);
+  // Re-check auto : met à jour seulement si le diff a changé de ≥ 50cp
+  // (évite les micro-corrections inutiles)
+  const ann2 = classifyByCpDiff(diff2, move, moveNum, cpAfter2);
+  const winB2 = cpToWin(bestCp2);
+  const winA2 = cpToWin(playedCp2);
+  const acc2  = winToAccuracy(winB2, winA2);
 
-  // Met à jour seulement si ça change vraiment (≥50cp ou annotation différente)
   if(Math.abs(diff2-diff1)>=50 || ann2!==ann1){
-    renderAnalysis(card, body, move, ann2, sfAfter2, diff2, acc2, true);
+    // La passe profonde a changé le diagnostic → met à jour avec animation
+    renderAnalysis(card, body, move, ann2, cpAfter2, diff2, acc2, true);
+    // Met aussi à jour le badge sur l'échiquier si annotation changée
     if(ann2!==ann1) showAnnotationOnSquare(move.to, ann2);
   }
 
@@ -1453,13 +1390,14 @@ async function requestAI(move, ann, evalBefore, evalAfter){
 }
 
 // Rendu de la carte d'analyse
-function renderAnalysis(card, body, move, ann, evalCpWhite, diff, accuracy, isRefined){
+function renderAnalysis(card, body, move, ann, evalCp, diff, accuracy, isRefined){
   const pn={p:'pion',n:'cavalier',b:'fou',r:'tour',q:'dame',k:'roi'};
   const PA={p:'Le pion',n:'Le cavalier',b:'Le fou',r:'La tour',q:'La dame',k:'Le roi'};
   const piece=PA[move.piece]||'La pièce';
   const color=move.color==='w'?'Blancs':'Noirs';
   const adv=move.color==='w'?'Noirs':'Blancs';
-  const isWhiteMove=move.color==='w';?` capture le ${pn[move.captured]} en ${move.to}`:` en ${move.to}`;
+
+  const captured=move.captured?` capture le ${pn[move.captured]} en ${move.to}`:` en ${move.to}`;
   const check=chess.in_check()?` Échec !`:'';
 
   // Texte principal
@@ -1468,21 +1406,17 @@ function renderAnalysis(card, body, move, ann, evalCpWhite, diff, accuracy, isRe
   else if(ann===ANN.promo)       main=`⬆ Promotion en Dame sur ${move.to} !`;
   else if(ann===ANN.castle)      main=`Roque — roi en sécurité, tours actives.`;
   else if(ann===ANN.theory)      main=`${piece}${captured}. Coup de théorie.${check}`;
-  else                           main=`${piece}${captured}.${check} ${getMoveContext(move, ann, diff, evalCpWhite, null)}`;
+  else                           main=`${piece}${captured}.${check} ${getMoveContext(move, ann, diff, evalCp, null)}`;
 
-  // Affichage eval : sfAfter est du point de vue de l'adversaire (joueur suivant)
-  // Pour afficher en convention universelle (positif = avantage Blanc) :
-  // Si c'était les Blancs qui jouaient → sfAfter = point de vue Noirs → inverser
-  // Si c'était les Noirs qui jouaient  → sfAfter = point de vue Blancs → garder
-  const evalForDisplay = isWhiteMove ? -evalCpWhite : evalCpWhite;
-  const evalPawns=(evalForDisplay/100).toFixed(2);
-  const evalSign=evalForDisplay>=0?'+':'';
-  // Vert = avantage Blanc, Rouge = avantage Noir (convention universelle échiquier)
-  const evalColor=evalForDisplay>100?'var(--green)':evalForDisplay<-100?'var(--red2)':'var(--text2)';
+  // Stats
+  const evalPawns=(evalCp/100).toFixed(2);
+  const evalSign=evalCp>=0?'+':'';
+  const evalColor=evalCp>100?'var(--green)':evalCp<-100?'var(--red2)':'var(--text2)';
 
   const accColor=accuracy>=85?'var(--green)':accuracy>=65?'var(--gold)':'var(--red2)';
   const diffPawns=(diff/100).toFixed(2);
 
+  // Indicateur "affiné" (passe 2)
   const refinedDot=isRefined?`<span style="font-size:0.6rem;color:var(--green);margin-left:4px">● affiné</span>`:'';
 
   const stats=`
@@ -1807,7 +1741,7 @@ function drawEvalGraph(canvasId,history){
 // ══════════════════════════════════════════════════════════
 let aiRunning=false;
 
-// Évalue un FEN et retourne le score en centipawns (point de vue Blancs)
+// Évalue un FEN via Worker ANALYSE
 function sfEval(fen, movetime=200){
   return new Promise(resolve=>{
     if(!sfAnalReady||!sfAnal){ resolve(null); return; }
@@ -1817,24 +1751,6 @@ function sfEval(fen, movetime=200){
     sfAnalSend(`position fen ${fen}`);
     sfAnalSend(`go movetime ${movetime}`);
   });
-}
-
-// Évalue un FEN en forçant un coup spécifique (UCI ex: "e2e4")
-// → retourne l'eval de la position APRÈS ce coup forcé
-function sfEvalAfterMove(fenBefore, uciMove, movetime=200){
-  return new Promise(resolve=>{
-    if(!sfAnalReady||!sfAnal){ resolve(null); return; }
-    sfAnalLines=[];
-    sfAnalCallback=(score)=>resolve(score);
-    sfAnalSend('setoption name MultiPV value 1');
-    sfAnalSend(`position fen ${fenBefore} moves ${uciMove}`);
-    sfAnalSend(`go movetime ${movetime}`);
-  });
-}
-
-// Convertit un move chess.js en notation UCI (ex: {from:'e2',to:'e4'} → "e2e4")
-function moveToUci(move){
-  return move.from+move.to+(move.promotion||'');
 }
 
 
