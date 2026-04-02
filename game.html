@@ -276,25 +276,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .depth-bar-bg{flex:1;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden}
 .depth-bar-fill{height:100%;background:var(--green);border-radius:2px;transition:width 0.5s}
 
-/* CHEAT PANEL — verrouillé, accès admin uniquement */
+/* CHEAT PANEL — moins visible, mode "hint" */
 .cheat-panel{background:#0d1117;border:1px solid #30363d;border-radius:10px;padding:12px;display:none;font-family:monospace}
 .cheat-panel.visible{display:block}
-
-/* ADMIN LOGIN MODAL */
-.admin-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);z-index:200;display:none;align-items:center;justify-content:center}
-.admin-overlay.show{display:flex}
-.admin-box{background:#0d1117;border:1px solid #30363d;border-radius:14px;padding:32px 28px;width:320px;box-shadow:0 24px 60px rgba(0,0,0,0.8)}
-.admin-box h3{font-family:'DM Serif Display',serif;font-size:1.3rem;color:#81b64c;margin-bottom:4px;text-align:center}
-.admin-box .admin-sub{font-size:0.75rem;color:#555;text-align:center;margin-bottom:22px;letter-spacing:0.05em}
-.admin-field{margin-bottom:12px}
-.admin-field label{display:block;font-size:0.68rem;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:5px}
-.admin-field input{width:100%;background:#161b22;border:1px solid #30363d;color:#e6edf3;padding:9px 12px;border-radius:7px;font-size:0.88rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s}
-.admin-field input:focus{border-color:#81b64c}
-.admin-error{font-size:0.72rem;color:#ff6b6b;text-align:center;min-height:18px;margin-bottom:8px}
-.admin-btn{width:100%;background:#81b64c;border:none;color:#fff;padding:10px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:700;cursor:pointer;transition:background 0.18s;margin-bottom:8px}
-.admin-btn:hover{background:#6fa03d}
-.admin-cancel{width:100%;background:transparent;border:1px solid #30363d;color:#555;padding:8px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;transition:all 0.18s}
-.admin-cancel:hover{border-color:#555;color:#8b949e}
 .cheat-title{font-size:0.65rem;font-weight:700;color:#8b949e;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .cheat-btn{display:block;width:100%;background:#161b22;border:1px solid #30363d;color:#8b949e;padding:7px 10px;border-radius:6px;font-family:monospace;font-size:0.75rem;cursor:pointer;text-align:left;margin-bottom:5px;transition:all 0.18s}
 .cheat-btn:hover{border-color:#555;color:#ccc;background:#1a1f29}
@@ -359,6 +343,31 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   .piece-wrap svg{width:52px;height:52px}
   .player-bar,.opening-bar,#status-msg{width:460px}
 }
+
+/* CHEAT PANEL */
+.cheat-panel{background:#0d1117;border:1px solid #30363d;border-radius:10px;padding:12px;display:none;font-family:monospace}
+.cheat-panel.visible{display:block}
+.cheat-title{font-size:0.65rem;font-weight:700;color:#8b949e;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.cheat-btn{display:block;width:100%;background:#161b22;border:1px solid #30363d;color:#8b949e;padding:7px 10px;border-radius:6px;font-family:monospace;font-size:0.75rem;cursor:pointer;text-align:left;margin-bottom:5px;transition:all 0.18s}
+.cheat-btn:hover{border-color:#555;color:#ccc;background:#1a1f29}
+.cheat-divider{border:none;border-top:1px solid #21262d;margin:8px 0}
+.cheat-status{font-size:0.68rem;color:#3fb950;margin-top:6px;font-style:italic}
+.cheat-move-item{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:0.72rem;cursor:pointer;padding:4px 6px;border-radius:5px;transition:background 0.15s}
+/* ADMIN MODAL */
+.admin-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);z-index:200;display:none;align-items:center;justify-content:center}
+.admin-overlay.show{display:flex}
+.admin-box{background:#0d1117;border:1px solid #30363d;border-radius:14px;padding:32px 28px;width:320px;box-shadow:0 24px 60px rgba(0,0,0,0.8)}
+.admin-box h3{font-family:'DM Serif Display',serif;font-size:1.3rem;color:#81b64c;margin-bottom:4px;text-align:center}
+.admin-sub{font-size:0.75rem;color:#555;text-align:center;margin-bottom:22px;letter-spacing:0.05em}
+.admin-field{margin-bottom:12px}
+.admin-field label{display:block;font-size:0.68rem;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:5px}
+.admin-field input{width:100%;background:#161b22;border:1px solid #30363d;color:#e6edf3;padding:9px 12px;border-radius:7px;font-size:0.88rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s}
+.admin-field input:focus{border-color:#81b64c}
+.admin-error{font-size:0.72rem;color:#ff6b6b;text-align:center;min-height:18px;margin-bottom:8px}
+.admin-btn-login{width:100%;background:#81b64c;border:none;color:#fff;padding:10px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:700;cursor:pointer;transition:background 0.18s;margin-bottom:8px}
+.admin-btn-login:hover{background:#6fa03d}
+.admin-cancel{width:100%;background:transparent;border:1px solid #30363d;color:#555;padding:8px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;transition:all 0.18s}
+.admin-cancel:hover{border-color:#555;color:#8b949e}
 </style>
 </head>
 <body>
@@ -589,22 +598,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
           <button class="chat-send" onclick="sendChat()">↑</button>
         </div>
       </div>
-      <!-- CHEAT PANEL — accès admin uniquement -->
+      <!-- CHEAT PANEL admin -->
       <div class="cheat-panel" id="cheat-panel">
-        <!-- Vue non connecté -->
         <div id="cheat-locked-view">
-          <div class="cheat-title">🔒 MODE INDICES — Réservé Admin</div>
+          <div class="cheat-title">🔒 MODE INDICES — Admin</div>
           <button class="cheat-btn" onclick="showAdminLogin()" style="color:#81b64c;border-color:#2a3a2a">🔑 Connexion Admin</button>
-          <div class="cheat-status" id="cheat-status-locked" style="color:#555">Accès restreint.</div>
+          <div class="cheat-status" style="color:#555">Accès restreint.</div>
         </div>
-        <!-- Vue connecté (admin) -->
         <div id="cheat-admin-view" style="display:none">
-          <div class="cheat-title">⚡ MODE INDICES <span id="admin-username-badge" style="color:#81b64c;font-size:0.6rem;margin-left:6px;background:rgba(129,182,76,0.1);border:1px solid rgba(129,182,76,0.2);padding:1px 6px;border-radius:4px"></span></div>
-          <button class="cheat-btn" onclick="cheatBestMove()">💡 Voir le meilleur coup</button>
+          <div class="cheat-title">⚡ INDICES <span id="admin-username-badge" style="color:#81b64c;font-size:0.6rem;margin-left:4px"></span></div>
+          <button class="cheat-btn" onclick="cheatBestMove()">💡 Meilleur coup</button>
           <button class="cheat-btn" onclick="cheatTop3()">📊 Top 3 coups</button>
           <hr class="cheat-divider">
           <div id="cheat-top3-panel" style="display:none">
-            <div style="font-size:0.65rem;color:#8b949e;margin-bottom:5px;letter-spacing:0.08em">ANALYSE STOCKFISH</div>
+            <div style="font-size:0.65rem;color:#8b949e;margin-bottom:5px">ANALYSE STOCKFISH</div>
             <div id="cheat-moves-list"></div>
           </div>
           <button class="cheat-btn" onclick="cheatClear()" style="color:#555;margin-top:4px">✖ Effacer</button>
@@ -641,26 +648,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 </div>
 
 <button class="sound-fab" id="sound-fab" onclick="toggleSound()" title="Son">🔊</button>
-
-<!-- ADMIN LOGIN MODAL -->
-<div class="admin-overlay" id="admin-overlay">
-  <div class="admin-box">
-    <div style="text-align:center;margin-bottom:14px">🛡️</div>
-    <h3>Accès Admin</h3>
-    <div class="admin-sub">Zone réservée · ChessMaster Pro</div>
-    <div class="admin-field">
-      <label>Nom d'utilisateur</label>
-      <input type="text" id="admin-user-input" placeholder="Utilisateur" autocomplete="off" onkeydown="if(event.key==='Enter')adminLogin()">
-    </div>
-    <div class="admin-field">
-      <label>Mot de passe</label>
-      <input type="password" id="admin-pass-input" placeholder="••••••••••••" onkeydown="if(event.key==='Enter')adminLogin()">
-    </div>
-    <div class="admin-error" id="admin-error"></div>
-    <button class="admin-btn" id="admin-btn" onclick="adminLogin()">🔑 Se connecter</button>
-    <button class="admin-cancel" onclick="hideAdminLogin()">Annuler</button>
-  </div>
-</div>
 
 <script>
 // ══════════════════════════════════════════════════════════
@@ -964,7 +951,7 @@ function handleSFAnalMsg(line){
     }
   }
   if(line.startsWith('bestmove')){
-    if(sfAnalCallback){const cb=sfAnalCallback;sfAnalCallback=null;cb(sfAnalLines[0]?.score??null);}
+    if(sfAnalCallback){const cb=sfAnalCallback;sfAnalCallback=null;cb(sfAnalLines[0]&&sfAnalLines[0].score!=null?sfAnalLines[0].score:null);}
   }
 }
 
@@ -1147,13 +1134,13 @@ function isTheoreticalMove(move){
 }
 
 // ══════════════════════════════════════════════════════════
-// ANNOTATIONS — symboles et couleurs
+// ANNOTATIONS
 // ══════════════════════════════════════════════════════════
 const ANN={
   theory:    {sym:'⭐',label:'THÉORIQUE',   bg:'#7c5c00',fg:'#ffd700'},
   brilliant: {sym:'!!',label:'EXCELLENT',   bg:'#1dbfad',fg:'#fff'},
   good:      {sym:'!', label:'BON COUP',    bg:'#5aa45a',fg:'#fff'},
-  best:      {sym:'✓', label:'MEILLEUR',    bg:'#2d6a4f',fg:'#95d5b2'},
+  best:      {sym:'!', label:'MEILLEUR',    bg:'#2d6a4f',fg:'#95d5b2'},
   correct:   {sym:'✓', label:'CORRECT',     bg:'#444d48',fg:'#9db89a'},
   inaccurate:{sym:'?!',label:'IMPRÉCIS',    bg:'#8f7520',fg:'#f5c842'},
   mistake:   {sym:'?', label:'ERREUR',      bg:'#b06020',fg:'#ffaa55'},
@@ -1163,297 +1150,30 @@ const ANN={
   castle:    {sym:'!', label:'ROQUE',       bg:'#4a7fc1',fg:'#fff'},
   promo:     {sym:'⬆',label:'PROMOTION',   bg:'#7a4a9a',fg:'#fff'},
 };
-
 // Annotation préliminaire immédiate (avant résultat Stockfish)
-function getAnnotation(before,after,color,move,theory=false){
+function getAnnotation(before,after,color,move,theory){
+  if(theory===undefined) theory=false;
   if(chess.in_checkmate()) return ANN.mate;
   if(move.promotion)       return ANN.promo;
   if(move.san&&move.san.includes('O-O')) return ANN.castle;
   if(theory)               return ANN.theory;
-  return ANN.correct; // sera affinée par requestAI
+  return ANN.correct;
 }
 
 // ══════════════════════════════════════════════════════════
-// MOTEUR D'ANALYSE — Double passe, diff best vs joué
+// ADMIN AUTH
 // ══════════════════════════════════════════════════════════
-//
-// MÉTHODE (basée sur Lichess + Chess.com) :
-//  Passe 1 — RAPIDE (depth ~12, ~200ms) : affichage immédiat
-//  Passe 2 — PROFONDE (depth ~18, ~800ms) : correction si delta change ≥50cp
-//
-// CLASSIFICATION (diff = eval_best_move - eval_move_joué, en cp) :
-//  diff < 10  → MEILLEUR / EXCELLENT
-//  diff < 25  → BON
-//  diff < 50  → CORRECT
-//  diff < 100 → IMPRÉCIS       (~0.5 pion perdu, Lichess: ?!)
-//  diff < 200 → ERREUR         (~1 pion perdu,   Chess.com: ?)
-//  diff < 400 → GAFFE          (~2 pions perdus, Chess.com: ??)
-//  diff ≥ 400 → RATÉ           (catastrophe)
-//
-// Anti-erreur :
-//  - Ouverture (≤10 coups) : tolérance ×2
-//  - Positions gagnées (|eval| > 500) : tolérance ×1.5
-//  - Mat > classification override direct
-//  - Sacrifice : swing brutal → attendre passe profonde
-// ══════════════════════════════════════════════════════════
+var adminLoggedIn=false, adminName='', adminToken=null;
 
-// Évalue le MEILLEUR coup possible depuis une position (MultiPV 1)
-// Retourne {bestCp, bestMove} ou null
-function sfEvalBest(fen, movetime){
-  return new Promise(resolve=>{
-    if(!sfAnalReady||!sfAnal){ resolve(null); return; }
-    sfAnalLines=[];
-    sfAnalCallback=(score)=>{
-      // sfAnalLines[0] contient aussi le bestmove via handleSFAnalMsg étendu
-      resolve(score);
-    };
-    sfAnalSend('setoption name MultiPV value 1');
-    sfAnalSend(`position fen ${fen}`);
-    sfAnalSend(`go movetime ${movetime}`);
-  });
-}
-
-// Calcule le diff cp entre le meilleur coup et le coup joué
-// bestCp = eval de la position si on avait joué le meilleur coup (du point de vue joueur actif)
-// afterCp = eval de la position après le coup joué (du point de vue joueur actif)
-function cpDiff(bestCp, afterCp, color){
-  // Les deux sont du point de vue du joueur qui vient de jouer
-  // bestCp ≥ afterCp toujours (le meilleur coup est au moins aussi bon)
-  return Math.max(0, bestCp - afterCp);
-}
-
-// Centipawns → Win% (formule officielle Lichess)
-function cpToWin(cp){
-  const c=Math.max(-3000,Math.min(3000,cp));
-  return 50+50*(2/(1+Math.exp(-0.00368208*c))-1);
-}
-// Accuracy% du coup (formule officielle Lichess)
-function winToAccuracy(winBefore, winAfter){
-  const loss=Math.max(0, winBefore-winAfter);
-  return Math.max(0,Math.min(100, 103.1668*Math.exp(-0.04354*loss)-3.1669));
-}
-
-// Classification principale basée sur diff centipawns
-function classifyByCpDiff(diff, move, moveNum, evalAfterCp){
-  // Cas spéciaux override
-  if(chess.in_checkmate()) return ANN.mate;
-  if(move.promotion)       return ANN.promo;
-  if(move.san&&move.san.includes('O-O')) return ANN.castle;
-  if(isTheoreticalMove(move)) return ANN.theory;
-
-  // Tolérance adaptative
-  let tol = 1.0;
-  // Ouverture : tolérance ×2 (les 10 premiers coups)
-  if(moveNum <= 10) tol = 2.0;
-  // Position très gagnée/perdue : tolérance ×1.5 (peu importe l'imprécision)
-  else if(Math.abs(evalAfterCp) > 500) tol = 1.5;
-
-  const d = diff / tol; // diff normalisée
-
-  // Seuils (basés sur les standards Lichess/Chess.com/DecodeChess)
-  if(d < 10)  return ANN.best;        // < 0.10 pion → meilleur coup ou excellent
-  if(d < 25)  return ANN.good;        // < 0.25 pion → bon
-  if(d < 50)  return ANN.correct;     // < 0.50 pion → correct
-  if(d < 100) return ANN.inaccurate;  // < 1.00 pion → imprécis (?!)
-  if(d < 200) return ANN.mistake;     // < 2.00 pions → erreur (?)
-  if(d < 400) return ANN.blunder;     // < 4.00 pions → gaffe (??)
-  return ANN.miss;                    // ≥ 4.00 pions → raté (✗)
-}
-
-// Contexte humain : pourquoi le coup est bon/mauvais
-function getMoveContext(move, ann, diff, evalAfterCp, bestMoveUci){
-  const pn={p:'pion',n:'cavalier',b:'fou',r:'tour',q:'dame',k:'roi'};
-  const color=move.color==='w'?'Blancs':'Noirs';
-  const adv=move.color==='w'?'Noirs':'Blancs';
-
-  // Contexte spécifique selon annotation
-  if(ann===ANN.blunder||ann===ANN.miss){
-    // Détecter le type de gaffe
-    if(move.captured&&diff>200) return `Échange trop coûteux — perd du matériel.`;
-    if(diff>400) return `Rate une tactique décisive.`;
-    return `Cède un avantage majeur aux ${adv}.`;
-  }
-  if(ann===ANN.mistake){
-    if(move.captured) return `Capture sous-optimale — meilleure prise existait.`;
-    return `Affaiblit la position des ${color}.`;
-  }
-  if(ann===ANN.inaccurate){
-    return `Coup jouable mais imprécis — une meilleure option existait.`;
-  }
-  if(ann===ANN.brilliant||ann===ANN.best){
-    if(move.captured) return `Excellente capture !`;
-    if(chess.in_check()) return `Attaque décisive !`;
-    return `Meilleur coup de la position.`;
-  }
-  if(ann===ANN.good) return `Bon coup — la position reste solide.`;
-  if(ann===ANN.correct) return `Coup solide — position stable.`;
-  return '';
-}
-
-// État de l'analyse en cours
-let analRequestId=0;
-let analPendingUpdate=null; // timer pour la correction passe-2
-
-// Annule l'analyse en cours immédiatement
-function cancelAnalysis(){
-  if(sfAnal&&sfAnalReady){ try{ sfAnal.postMessage('stop'); }catch(e){} }
-  sfAnalCallback=null;
-  if(analPendingUpdate){ clearTimeout(analPendingUpdate); analPendingUpdate=null; }
-  aiRunning=false;
-}
-
-// ── Fonction principale d'analyse ────────────────────────
-async function requestAI(move, ann, evalBefore, evalAfter){
-  cancelAnalysis();
-  aiRunning=true;
-  const myId=++analRequestId;
-  const moveNum=Math.ceil(chess.history().length/2);
-
-  const card=document.getElementById('analysis-card');
-  const body=document.getElementById('analysis-body');
-  card.className='analysis-card';
-
-  // Affichage immédiat "en cours"
-  const loadingBadge=`<div class="ann-header"><div class="ann-symbol" style="background:${ann.bg};color:${ann.fg}">${ann.sym||'·'}</div><div><div class="ann-move-name">${move.san}</div><div class="ann-label">${ann.label}</div></div></div>`;
-  body.innerHTML=loadingBadge+`<div class="thinking"><div class="dots"><span></span><span></span><span></span></div>&nbsp;Stockfish analyse…</div>`;
-
-  if(!sfAnalReady){
-    // Fallback sans Stockfish
-    card.className='analysis-card has-result';
-    body.innerHTML=loadingBadge+`<div class="analysis-body loaded">${getMoveContext(move,ann,0,0,null)}</div>`;
-    aiRunning=false; return;
-  }
-
-  // Reconstruit la position AVANT le coup
-  const hist=chess.history({verbose:true});
-  const fenBefore=(()=>{
-    const t=new Chess();
-    hist.slice(0,-1).forEach(m=>t.move(m));
-    return t.fen();
-  })();
-  const fenAfter=chess.fen();
-  const isWhite=move.color==='w';
-
-  // ── PASSE 1 : RAPIDE (200ms) ─────────────────────────────
-  // Évalue position AVANT (pour trouver eval du meilleur coup)
-  const cpBefore1=await sfEval(fenBefore, 200);
-  if(myId!==analRequestId){ return; }
-  // Évalue position APRÈS (pour trouver eval du coup joué)
-  const cpAfter1=await sfEval(fenAfter, 200);
-  if(myId!==analRequestId){ return; }
-
-  // Calcul diff passe-1
-  // cpBefore est l'eval du meilleur coup possible (du point de vue du joueur actif)
-  // cpAfter est l'eval après le coup joué (du point de vue du joueur actif — on inverse car c'est maintenant l'adversaire)
-  const bestCp1 = isWhite ?  cpBefore1 : -cpBefore1;
-  const playedCp1 = isWhite ? cpAfter1 : -cpAfter1;
-  const diff1 = Math.max(0, bestCp1 - playedCp1);
-
-  const ann1 = classifyByCpDiff(diff1, move, moveNum, cpAfter1);
-  const winB1 = cpToWin(bestCp1);
-  const winA1 = cpToWin(playedCp1);
-  const acc1  = winToAccuracy(winB1, winA1);
-
-  // Affiche le résultat passe-1 immédiatement
-  renderAnalysis(card, body, move, ann1, cpAfter1, diff1, acc1, false);
-  if(myId!==analRequestId){ return; }
-
-  // ── PASSE 2 : PROFONDE (800ms, corrigée) ─────────────────
-  // Attend un court délai avant de lancer (laisse respirer le worker)
-  await new Promise(r=>{ analPendingUpdate=setTimeout(r, 300); });
-  if(myId!==analRequestId){ return; }
-
-  const cpBefore2=await sfEval(fenBefore, 800);
-  if(myId!==analRequestId){ return; }
-  const cpAfter2=await sfEval(fenAfter, 800);
-  if(myId!==analRequestId){ return; }
-
-  const bestCp2 = isWhite ?  cpBefore2 : -cpBefore2;
-  const playedCp2 = isWhite ? cpAfter2 : -cpAfter2;
-  const diff2 = Math.max(0, bestCp2 - playedCp2);
-
-  // Re-check auto : met à jour seulement si le diff a changé de ≥ 50cp
-  // (évite les micro-corrections inutiles)
-  const ann2 = classifyByCpDiff(diff2, move, moveNum, cpAfter2);
-  const winB2 = cpToWin(bestCp2);
-  const winA2 = cpToWin(playedCp2);
-  const acc2  = winToAccuracy(winB2, winA2);
-
-  if(Math.abs(diff2-diff1)>=50 || ann2!==ann1){
-    // La passe profonde a changé le diagnostic → met à jour avec animation
-    renderAnalysis(card, body, move, ann2, cpAfter2, diff2, acc2, true);
-    // Met aussi à jour le badge sur l'échiquier si annotation changée
-    if(ann2!==ann1) showAnnotationOnSquare(move.to, ann2);
-  }
-
-  aiRunning=false;
-}
-
-// Rendu de la carte d'analyse
-function renderAnalysis(card, body, move, ann, evalCp, diff, accuracy, isRefined){
-  const pn={p:'pion',n:'cavalier',b:'fou',r:'tour',q:'dame',k:'roi'};
-  const PA={p:'Le pion',n:'Le cavalier',b:'Le fou',r:'La tour',q:'La dame',k:'Le roi'};
-  const piece=PA[move.piece]||'La pièce';
-  const color=move.color==='w'?'Blancs':'Noirs';
-  const adv=move.color==='w'?'Noirs':'Blancs';
-
-  const captured=move.captured?` capture le ${pn[move.captured]} en ${move.to}`:` en ${move.to}`;
-  const check=chess.in_check()?` Échec !`:'';
-
-  // Texte principal
-  let main='';
-  if(chess.in_checkmate())       main=`♛ Échec et mat — les ${color} gagnent !`;
-  else if(ann===ANN.promo)       main=`⬆ Promotion en Dame sur ${move.to} !`;
-  else if(ann===ANN.castle)      main=`Roque — roi en sécurité, tours actives.`;
-  else if(ann===ANN.theory)      main=`${piece}${captured}. Coup de théorie.${check}`;
-  else                           main=`${piece}${captured}.${check} ${getMoveContext(move, ann, diff, evalCp, null)}`;
-
-  // Stats
-  const evalPawns=(evalCp/100).toFixed(2);
-  const evalSign=evalCp>=0?'+':'';
-  const evalColor=evalCp>100?'var(--green)':evalCp<-100?'var(--red2)':'var(--text2)';
-
-  const accColor=accuracy>=85?'var(--green)':accuracy>=65?'var(--gold)':'var(--red2)';
-  const diffPawns=(diff/100).toFixed(2);
-
-  // Indicateur "affiné" (passe 2)
-  const refinedDot=isRefined?`<span style="font-size:0.6rem;color:var(--green);margin-left:4px">● affiné</span>`:'';
-
-  const stats=`
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:0.72rem;align-items:center">
-      <span style="color:${accColor};font-weight:700">${accuracy.toFixed(0)}% précision</span>
-      <span style="color:${evalColor}">Éval : ${evalSign}${evalPawns}</span>
-      ${diff>=10?`<span style="color:var(--dimmer)">−${diffPawns} vs meilleur</span>`:''}
-      ${refinedDot}
-    </div>`;
-
-  const badge=`<div class="ann-header"><div class="ann-symbol" style="background:${ann.bg};color:${ann.fg};${isRefined?'transition:all 0.4s':''}">${ann.sym||'·'}</div><div><div class="ann-move-name">${move.san}</div><div class="ann-label">${ann.label}</div></div></div>`;
-
-  card.className='analysis-card has-result';
-  body.innerHTML=badge+`<div class="analysis-body loaded">${main}${stats}</div>`;
-}
-
-// ══════════════════════════════════════════════════════════
-// ADMIN AUTH — Accès mode indices (API serveur Vercel)
-// Le mot de passe n'est JAMAIS stocké dans ce fichier.
-// Il est vérifié côté serveur via /api/auth
-// ══════════════════════════════════════════════════════════
-let adminLoggedIn=false;
-let adminName='';
-let adminToken=null;
-
-// Vérifie si un token de session valide existe déjà (tab rechargé)
 function checkAdminSession(){
   try{
-    const stored=sessionStorage.getItem('_cm_admin');
+    var stored=sessionStorage.getItem('_cm_admin');
     if(stored){
-      const {token,user,exp}=JSON.parse(stored);
-      if(token&&user&&exp>Date.now()){
-        adminLoggedIn=true; adminName=user; adminToken=token;
-        unlockAdminPanel(user);
-      }else{
-        sessionStorage.removeItem('_cm_admin');
-      }
+      var d=JSON.parse(stored);
+      if(d.token&&d.user&&d.exp>Date.now()){
+        adminLoggedIn=true; adminName=d.user; adminToken=d.token;
+        unlockAdminPanel(d.user);
+      }else{ sessionStorage.removeItem('_cm_admin'); }
     }
   }catch(e){}
 }
@@ -1465,74 +1185,48 @@ function showAdminLogin(){
   document.getElementById('admin-error').textContent='';
   document.getElementById('admin-btn').disabled=false;
   document.getElementById('admin-btn').textContent='🔑 Se connecter';
-  setTimeout(()=>document.getElementById('admin-user-input').focus(),80);
+  setTimeout(function(){ document.getElementById('admin-user-input').focus(); },80);
 }
-function hideAdminLogin(){
-  document.getElementById('admin-overlay').classList.remove('show');
-}
+function hideAdminLogin(){ document.getElementById('admin-overlay').classList.remove('show'); }
 
 async function adminLogin(){
-  const user=document.getElementById('admin-user-input').value.trim();
-  const pass=document.getElementById('admin-pass-input').value;
-  const errEl=document.getElementById('admin-error');
-  const btn=document.getElementById('admin-btn');
-
-  if(!user||!pass){errEl.textContent='⚠ Remplissez tous les champs.';return;}
-
+  var user=document.getElementById('admin-user-input').value.trim();
+  var pass=document.getElementById('admin-pass-input').value;
+  var errEl=document.getElementById('admin-error');
+  var btn=document.getElementById('admin-btn');
+  if(!user||!pass){ errEl.textContent='⚠ Remplissez tous les champs.'; return; }
   btn.disabled=true; btn.textContent='⏳ Vérification…'; errEl.textContent='';
-
-  // ── Essai 1 : vérification via API serveur Vercel ─────────
-  let serverOk=false;
   try{
-    const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),5000); // timeout 5s
-    const res=await fetch('/api/auth',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({user,pass}),
-      signal:controller.signal
-    });
+    var controller=new AbortController();
+    var timeout=setTimeout(function(){ controller.abort(); },5000);
+    var res=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:user,pass:pass}),signal:controller.signal});
     clearTimeout(timeout);
-    const data=await res.json();
+    var data=await res.json();
     if(res.ok&&data.ok){
-      serverOk=true;
       adminLoggedIn=true; adminName=data.username; adminToken=data.token;
-      sessionStorage.setItem('_cm_admin',JSON.stringify({
-        token:data.token, user:data.username, exp:Date.now()+8*3600000
-      }));
-      hideAdminLogin();
-      unlockAdminPanel(data.username);
+      sessionStorage.setItem('_cm_admin',JSON.stringify({token:data.token,user:data.username,exp:Date.now()+8*3600000}));
+      hideAdminLogin(); unlockAdminPanel(data.username);
       addChatMsg('⚡ Mode indices admin activé — bienvenue '+data.username+' !','system');
     } else {
-      // Serveur répond mais identifiants faux
       errEl.textContent='❌ '+(data.error||'Identifiants incorrects');
       document.getElementById('admin-pass-input').value='';
-      document.getElementById('admin-pass-input').focus();
       btn.disabled=false; btn.textContent='🔑 Se connecter';
-      return;
     }
   }catch(e){
-    // ── Fallback : API inaccessible → vérification locale ────
-    // Hash simple du mot de passe pour ne pas le stocker en clair
-    const encoder=new TextEncoder();
-    const hashBuf=await crypto.subtle.digest('SHA-256',encoder.encode(user+':'+pass));
-    const hashHex=Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-    // Hash de "sucoona:Lopos562se" pré-calculé
-    const VALID_HASH='e3d4e3e7e1d1c8f2a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2';
-    // On recalcule à la volée pour ne pas stocker le hash en dur non plus
-    const validBuf=await crypto.subtle.digest('SHA-256',encoder.encode('sucoona:Lopos562se'));
-    const validHex=Array.from(new Uint8Array(validBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-    if(hashHex===validHex){
-      const token=btoa(user+':local:'+Date.now());
+    // Fallback local via SHA-256
+    var encoder=new TextEncoder();
+    var hBuf=await crypto.subtle.digest('SHA-256',encoder.encode(user+':'+pass));
+    var hHex=Array.from(new Uint8Array(hBuf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+    var vBuf=await crypto.subtle.digest('SHA-256',encoder.encode('sucoona:Lopos562se'));
+    var vHex=Array.from(new Uint8Array(vBuf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+    if(hHex===vHex){
+      var token=btoa(user+':local:'+Date.now());
       adminLoggedIn=true; adminName=user; adminToken=token;
-      sessionStorage.setItem('_cm_admin',JSON.stringify({
-        token, user, exp:Date.now()+8*3600000
-      }));
-      hideAdminLogin();
-      unlockAdminPanel(user);
-      addChatMsg('⚡ Mode admin activé (local) — bienvenue '+user+' !','system');
+      sessionStorage.setItem('_cm_admin',JSON.stringify({token:token,user:user,exp:Date.now()+8*3600000}));
+      hideAdminLogin(); unlockAdminPanel(user);
+      addChatMsg('⚡ Mode admin activé — bienvenue '+user+' !','system');
     } else {
-      errEl.textContent='⚠ Serveur inaccessible et identifiants incorrects.';
+      errEl.textContent='⚠ Erreur réseau ou identifiants incorrects.';
       btn.disabled=false; btn.textContent='🔑 Se connecter';
     }
   }
@@ -1553,10 +1247,10 @@ function adminLogout(){
 }
 
 function cheatClear(){
-  document.querySelectorAll('.sq.cheat-from,.sq.cheat-to').forEach(e=>e.classList.remove('cheat-from','cheat-to'));
+  document.querySelectorAll('.sq.cheat-from,.sq.cheat-to').forEach(function(e){ e.classList.remove('cheat-from','cheat-to'); });
   clearArrows();
-  const t3=document.getElementById('cheat-top3-panel');if(t3)t3.style.display='none';
-  const st=document.getElementById('cheat-status');if(st)st.textContent='Effacé.';
+  var t3=document.getElementById('cheat-top3-panel'); if(t3) t3.style.display='none';
+  var st=document.getElementById('cheat-status'); if(st) st.textContent='Effacé.';
 }
 
 async function cheatBestMove(){
@@ -1593,7 +1287,7 @@ async function cheatTop3(){
       list.appendChild(div);
     });
     document.getElementById('cheat-top3-panel').style.display='block';
-    document.getElementById('cheat-status').textContent=`${results.length} coups analysés`;
+    document.getElementById('cheat-status').textContent=`${results.length} coups analysés (indices seulement)`;
   }catch(e){document.getElementById('cheat-status').textContent='Erreur moteur.';}
 }
 
@@ -1735,24 +1429,159 @@ function drawEvalGraph(canvasId,history){
 }
 
 // ══════════════════════════════════════════════════════════
-// AI ANALYSIS — Commentaires (via Anthropic proxy ou fallback)
-// ══════════════════════════════════════════════════════════
-// sfEval — évalue un FEN via Worker ANALYSE
+// ANALYSE — Double passe Stockfish, style Lichess/Chess.com
 // ══════════════════════════════════════════════════════════
 let aiRunning=false;
+let analRequestId=0;
+let analPendingUpdate=null;
 
-// Évalue un FEN via Worker ANALYSE
-function sfEval(fen, movetime=200){
-  return new Promise(resolve=>{
+function sfEval(fen, movetime){
+  if(!movetime) movetime=200;
+  return new Promise(function(resolve){
     if(!sfAnalReady||!sfAnal){ resolve(null); return; }
     sfAnalLines=[];
-    sfAnalCallback=(score)=>resolve(score);
+    sfAnalCallback=function(score){ resolve(score); };
     sfAnalSend('setoption name MultiPV value 1');
-    sfAnalSend(`position fen ${fen}`);
-    sfAnalSend(`go movetime ${movetime}`);
+    sfAnalSend('position fen '+fen);
+    sfAnalSend('go movetime '+movetime);
   });
 }
 
+function cpToWin(cp){
+  var c=Math.max(-3000,Math.min(3000,cp));
+  return 50+50*(2/(1+Math.exp(-0.00368208*c))-1);
+}
+function winToAccuracy(wb, wa){
+  var loss=Math.max(0, wb-wa);
+  return Math.max(0,Math.min(100, 103.1668*Math.exp(-0.04354*loss)-3.1669));
+}
+
+function classifyByCpDiff(diff, move, moveNum, evalAfterCp){
+  if(chess.in_checkmate()) return ANN.mate;
+  if(move.promotion)       return ANN.promo;
+  if(move.san&&move.san.includes('O-O')) return ANN.castle;
+  if(isTheoreticalMove(move)) return ANN.theory;
+  var tol=1.0;
+  if(moveNum<=10) tol=2.0;
+  else if(Math.abs(evalAfterCp)>500) tol=1.5;
+  var d=diff/tol;
+  if(d<10)  return ANN.best;
+  if(d<25)  return ANN.good;
+  if(d<50)  return ANN.correct;
+  if(d<100) return ANN.inaccurate;
+  if(d<200) return ANN.mistake;
+  if(d<400) return ANN.blunder;
+  return ANN.miss;
+}
+
+function getMoveContext(move, ann, diff, evalAfterCp){
+  var color=move.color==='w'?'Blancs':'Noirs';
+  var adv=move.color==='w'?'Noirs':'Blancs';
+  if(ann===ANN.blunder||ann===ANN.miss){
+    if(move.captured&&diff>200) return 'Échange trop coûteux — perd du matériel.';
+    if(diff>400) return 'Rate une tactique décisive.';
+    return 'Cède un avantage majeur aux '+adv+'.';
+  }
+  if(ann===ANN.mistake) return move.captured?'Capture sous-optimale.':'Affaiblit la position des '+color+'.';
+  if(ann===ANN.inaccurate) return 'Coup jouable mais imprécis.';
+  if(ann===ANN.brilliant||ann===ANN.best){
+    if(chess.in_check()) return 'Attaque décisive !';
+    if(move.captured) return 'Excellente capture !';
+    return 'Meilleur coup de la position.';
+  }
+  if(ann===ANN.good) return 'Bon coup — position solide.';
+  if(ann===ANN.correct) return 'Coup solide — position stable.';
+  return '';
+}
+
+function cancelAnalysis(){
+  if(sfAnal&&sfAnalReady){ try{ sfAnal.postMessage('stop'); }catch(e){} }
+  sfAnalCallback=null;
+  if(analPendingUpdate){ clearTimeout(analPendingUpdate); analPendingUpdate=null; }
+  aiRunning=false;
+}
+
+function renderAnalysis(card, body, move, ann, sfAfterCp, diff, accuracy, isRefined){
+  var pn={p:'pion',n:'cavalier',b:'fou',r:'tour',q:'dame',k:'roi'};
+  var PA={p:'Le pion',n:'Le cavalier',b:'Le fou',r:'La tour',q:'La dame',k:'Le roi'};
+  var piece=PA[move.piece]||'La pièce';
+  var color=move.color==='w'?'Blancs':'Noirs';
+  var isWhiteMove=move.color==='w';
+  var captured=move.captured?' capture le '+(pn[move.captured]||'pièce')+' en '+move.to:' en '+move.to;
+  var check=chess.in_check()?' Échec !':'';
+  var main='';
+  if(chess.in_checkmate())       main='♛ Échec et mat — les '+color+' gagnent !';
+  else if(ann===ANN.promo)       main='Promotion en Dame sur '+move.to+' !';
+  else if(ann===ANN.castle)      main='Roque — roi en sécurité, tours actives.';
+  else if(ann===ANN.theory)      main=piece+captured+'. Coup de théorie.'+check;
+  else                           main=piece+captured+'.'+check+' '+getMoveContext(move,ann,diff,sfAfterCp);
+  var evalForDisplay=isWhiteMove?-sfAfterCp:sfAfterCp;
+  var evalPawns=(evalForDisplay/100).toFixed(2);
+  var evalSign=evalForDisplay>=0?'+':'';
+  var evalColor=evalForDisplay>100?'var(--green)':evalForDisplay<-100?'var(--red2)':'var(--text2)';
+  var accColor=accuracy>=85?'var(--green)':accuracy>=65?'var(--gold)':'var(--red2)';
+  var diffPawns=(diff/100).toFixed(2);
+  var refinedDot=isRefined?'<span style="font-size:0.6rem;color:var(--green);margin-left:4px">● affiné</span>':'';
+  var stats='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:0.72rem;align-items:center">'
+    +'<span style="color:'+accColor+';font-weight:700">'+accuracy.toFixed(0)+'% précision</span>'
+    +'<span style="color:'+evalColor+'">Éval : '+evalSign+evalPawns+'</span>'
+    +(diff>=10?'<span style="color:var(--dimmer)">−'+diffPawns+' vs meilleur</span>':'')
+    +refinedDot+'</div>';
+  var badge='<div class="ann-header"><div class="ann-symbol" style="background:'+ann.bg+';color:'+ann.fg+'">'+(ann.sym||'·')+'</div><div><div class="ann-move-name">'+move.san+'</div><div class="ann-label">'+ann.label+'</div></div></div>';
+  card.className='analysis-card has-result';
+  body.innerHTML=badge+'<div class="analysis-body loaded">'+main+stats+'</div>';
+}
+
+async function requestAI(move, ann, evalBefore, evalAfter){
+  cancelAnalysis();
+  aiRunning=true;
+  var myId=++analRequestId;
+  var moveNum=Math.ceil(chess.history().length/2);
+  var card=document.getElementById('analysis-card');
+  var body=document.getElementById('analysis-body');
+  card.className='analysis-card';
+  var loadingBadge='<div class="ann-header"><div class="ann-symbol" style="background:'+ann.bg+';color:'+ann.fg+'">'+(ann.sym||'·')+'</div><div><div class="ann-move-name">'+move.san+'</div><div class="ann-label">'+ann.label+'</div></div></div>';
+  body.innerHTML=loadingBadge+'<div class="thinking"><div class="dots"><span></span><span></span><span></span></div>&nbsp;Stockfish analyse…</div>';
+
+  if(!sfAnalReady){
+    card.className='analysis-card has-result';
+    body.innerHTML=loadingBadge+'<div class="analysis-body loaded">'+getMoveContext(move,ann,0,0)+'</div>';
+    aiRunning=false; return;
+  }
+
+  var hist=chess.history({verbose:true});
+  var tmpBefore=new Chess();
+  hist.slice(0,-1).forEach(function(m){ tmpBefore.move(m); });
+  var fenBefore=tmpBefore.fen();
+  var fenAfter=chess.fen();
+
+  // PASSE 1 rapide
+  var sfBefore1=await sfEval(fenBefore, 200);
+  if(myId!==analRequestId){ return; }
+  var sfAfter1=await sfEval(fenAfter, 200);
+  if(myId!==analRequestId){ return; }
+  var diff1=Math.max(0, sfBefore1-(-sfAfter1));
+  var ann1=classifyByCpDiff(diff1, move, moveNum, sfAfter1);
+  var acc1=winToAccuracy(cpToWin(sfBefore1), cpToWin(-sfAfter1));
+  renderAnalysis(card, body, move, ann1, sfAfter1, diff1, acc1, false);
+  if(myId!==analRequestId){ return; }
+
+  // PASSE 2 profonde
+  await new Promise(function(r){ analPendingUpdate=setTimeout(r,300); });
+  if(myId!==analRequestId){ return; }
+  var sfBefore2=await sfEval(fenBefore, 600);
+  if(myId!==analRequestId){ return; }
+  var sfAfter2=await sfEval(fenAfter, 600);
+  if(myId!==analRequestId){ return; }
+  var diff2=Math.max(0, sfBefore2-(-sfAfter2));
+  var ann2=classifyByCpDiff(diff2, move, moveNum, sfAfter2);
+  var acc2=winToAccuracy(cpToWin(sfBefore2), cpToWin(-sfAfter2));
+  if(Math.abs(diff2-diff1)>=50||ann2!==ann1){
+    renderAnalysis(card, body, move, ann2, sfAfter2, diff2, acc2, true);
+    if(ann2!==ann1) showAnnotationOnSquare(move.to, ann2);
+  }
+  aiRunning=false;
+}
 
 // ══════════════════════════════════════════════════════════
 // CHAT
@@ -2048,10 +1877,6 @@ function startGame(mode){
   document.getElementById('difficulty-panel').style.display=mode==='ai'?'block':'none';
   document.getElementById('time-presets-panel').style.display=mode==='ai'?'none':'block';
 
-  // Cheat panel toujours visible (verrouillé si non admin)
-  const cheatPanel=document.getElementById('cheat-panel');
-  if(cheatPanel){cheatPanel.classList.add('visible');}
-
   if(mode==='online'&&myRoomCode){document.getElementById('oi-room-code').textContent=myRoomCode;document.getElementById('conn-dot').className='oi-dot ok';document.getElementById('conn-label').textContent='Connecté';}
   if(mode==='ai'){
     document.getElementById('name-white').textContent='Vous';
@@ -2065,10 +1890,11 @@ function startGame(mode){
     document.getElementById('name-black').textContent='Joueur Noir';
   }
 
+  var cp=document.getElementById('cheat-panel');if(cp)cp.classList.add('visible');
   boardFlipped=false;buildBoard();render();updateAll();
   const cml=document.getElementById('chat-mode-label');if(cml)cml.textContent=mode==='online'?'En ligne':mode==='ai'?'vs Stockfish':'Local';
   const chatDot=document.getElementById('chat-dot');if(chatDot)chatDot.style.background=mode==='online'?'var(--green)':'var(--blue)';
-  if(mode!=='online')addChatMsg('Nouvelle partie ! Bonne chance. 🤝','system');
+  if(mode!=='online')addChatMsg('Nouvelle partie ! Bonne chance. Tapez "hint" pour des indices Stockfish 🤫','system');
   showScreen('game-screen');
 }
 
@@ -2080,20 +1906,36 @@ function resetGame(){
 // ══════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════
-window.onload=()=>{
-  // Vérifie si une session admin existe déjà
+window.onload=function(){
   checkAdminSession();
-  // Check for mode from landing page
-  const mode=sessionStorage.getItem('chessStartMode');
+  var mode=sessionStorage.getItem('chessStartMode');
   if(mode){sessionStorage.removeItem('chessStartMode');startGame(mode);}
   else showScreen('home-screen');
-  // Init Stockfish
   initStockfish();
-  // URL param support
-  const params=new URLSearchParams(location.search);
-  const urlMode=params.get('mode');
-  if(urlMode)startGame(urlMode);
+  var params=new URLSearchParams(location.search);
+  var urlMode=params.get('mode');
+  if(urlMode) startGame(urlMode);
 };
 </script>
+
+<!-- ADMIN LOGIN MODAL -->
+<div class="admin-overlay" id="admin-overlay">
+  <div class="admin-box">
+    <div style="text-align:center;margin-bottom:14px;font-size:2rem">🛡️</div>
+    <h3>Accès Admin</h3>
+    <div class="admin-sub">Zone réservée · ChessMaster Pro</div>
+    <div class="admin-field">
+      <label>Utilisateur</label>
+      <input type="text" id="admin-user-input" placeholder="Utilisateur" autocomplete="off" onkeydown="if(event.key==='Enter')adminLogin()">
+    </div>
+    <div class="admin-field">
+      <label>Mot de passe</label>
+      <input type="password" id="admin-pass-input" placeholder="••••••••••" onkeydown="if(event.key==='Enter')adminLogin()">
+    </div>
+    <div class="admin-error" id="admin-error"></div>
+    <button class="admin-btn-login" id="admin-btn" onclick="adminLogin()">🔑 Se connecter</button>
+    <button class="admin-cancel" onclick="hideAdminLogin()">Annuler</button>
+  </div>
+</div>
 </body>
 </html>
