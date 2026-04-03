@@ -1521,10 +1521,14 @@ function renderAnalysis(card, body, move, ann, sfAfterCp, diff, accuracy, isRefi
   else if(ann===ANN.castle)      main='Roque — roi en sécurité, tours actives.';
   else if(ann===ANN.theory)      main=piece+captured+'. Coup de théorie.'+check;
   else                           main=piece+captured+'.'+check+' '+getMoveContext(move,ann,diff,sfAfterCp);
-  var evalForDisplay=isWhiteMove?-sfAfterCp:sfAfterCp;
+  // sfAfterCp = score UCI = point de vue Blancs
+  // Éval affiché = sfAfterCp directement (positif = avantage Blanc)
+  var evalForDisplay=sfAfterCp;
   var evalPawns=(evalForDisplay/100).toFixed(2);
   var evalSign=evalForDisplay>=0?'+':'';
-  var evalColor=evalForDisplay>100?'var(--green)':evalForDisplay<-100?'var(--red2)':'var(--text2)';
+  // Couleur du point de vue du joueur actif
+  var playerAdv=isWhiteMove?evalForDisplay:-evalForDisplay;
+  var evalColor=playerAdv>100?'var(--green)':playerAdv<-100?'var(--red2)':'var(--text2)';
   var accColor=accuracy>=85?'var(--green)':accuracy>=65?'var(--gold)':'var(--red2)';
   var diffPawns=(diff/100).toFixed(2);
   var refinedDot=isRefined?'<span style="font-size:0.6rem;color:var(--green);margin-left:4px">● affiné</span>':'';
@@ -1567,28 +1571,36 @@ async function requestAI(move, ann, evalBefore, evalAfter){
   var sfAfter1=await sfEval(fenAfter, 200);
   if(myId!==analRequestId){ return; }
 
-  // ── CALCUL DU DIFF ───────────────────────────────────────
-  // Convention Stockfish UCI : score toujours du point de vue du joueur actif.
-  // fenBefore → joueur actif joue → sfBefore = point de vue joueur actif
-  // fenAfter  → adversaire joue   → sfAfter  = point de vue adversaire
-  // playedCp (joueur actif) = -sfAfter
-  // diff = sfBefore - (-sfAfter) = sfBefore + sfAfter
-  //
-  // Vérification :
-  //   Coup neutre : sfBefore≈+50, sfAfter≈-50 → diff = 0 ✓
-  //   Gaffe :       sfBefore≈+50, sfAfter≈+200 → diff = 250cp (perd 2.5 pions) ✓
-  //   Bon coup :    sfBefore≈-50, sfAfter≈-80  → diff = -130 → max(0,-130) = 0 ✓
-
   if(sfBefore1===null||sfAfter1===null){
     renderAnalysis(card, body, move, ANN.correct, 0, 0, 85, false);
     aiRunning=false; return;
   }
 
-  var diff1=Math.max(0, sfBefore1+sfAfter1);
+  // ── FORMULE CORRECTE ─────────────────────────────────────
+  // handleSFAnalMsg retourne score UCI = TOUJOURS du point de vue des BLANCS
+  // (positif = avantage Blanc, négatif = avantage Noir)
+  //
+  // Pour calculer ce que le joueur actif a "perdu" par rapport au meilleur coup :
+  //   Si Blanc joue  : bestCp = sfBefore,  playedCp = sfAfter
+  //   Si Noir joue   : bestCp = -sfBefore, playedCp = -sfAfter
+  //                    (on inverse car Noir = bien jouer = rendre sfAfter plus négatif)
+  //
+  // diff = bestCp - playedCp (toujours ≥ 0 si le joueur joue son meilleur coup)
+  //
+  // Exemples :
+  //   Blanc joue e4 (normal) : sfBefore=+20, sfAfter=+20 → diff=0 ✓
+  //   Blanc gaffe             : sfBefore=+50, sfAfter=-200 → diff=250cp ✓
+  //   Noir joue Nc6 (normal)  : sfBefore=+120, sfAfter=+100 → bestCp=-120, playedCp=-100
+  //                             diff = -120 - (-100) = -20 → max(0,-20) = 0 ✓
+  //   Noir gaffe              : sfBefore=+50, sfAfter=+300 → bestCp=-50, playedCp=-300
+  //                             diff = -50 - (-300) = 250cp ✓
+
+  var isW = (move.color === 'w');
+  var bestCp1   = isW ?  sfBefore1 : -sfBefore1;
+  var playedCp1 = isW ?  sfAfter1  : -sfAfter1;
+  var diff1 = Math.max(0, bestCp1 - playedCp1);
   var ann1=classifyByCpDiff(diff1, move, moveNum, sfAfter1);
-  // winBefore = Win% du joueur actif avec le meilleur coup = cpToWin(sfBefore1)
-  // winAfter  = Win% du joueur actif après son coup = cpToWin(-sfAfter1)
-  var acc1=winToAccuracy(cpToWin(sfBefore1), cpToWin(-sfAfter1));
+  var acc1=winToAccuracy(cpToWin(bestCp1), cpToWin(playedCp1));
   renderAnalysis(card, body, move, ann1, sfAfter1, diff1, acc1, false);
   if(myId!==analRequestId){ return; }
 
@@ -1600,9 +1612,11 @@ async function requestAI(move, ann, evalBefore, evalAfter){
   var sfAfter2=await sfEval(fenAfter, 600);
   if(myId!==analRequestId){ return; }
   if(sfBefore2===null||sfAfter2===null){ aiRunning=false; return; }
-  var diff2=Math.max(0, sfBefore2+sfAfter2);
+  var bestCp2   = isW ?  sfBefore2 : -sfBefore2;
+  var playedCp2 = isW ?  sfAfter2  : -sfAfter2;
+  var diff2=Math.max(0, bestCp2 - playedCp2);
   var ann2=classifyByCpDiff(diff2, move, moveNum, sfAfter2);
-  var acc2=winToAccuracy(cpToWin(sfBefore2), cpToWin(-sfAfter2));
+  var acc2=winToAccuracy(cpToWin(bestCp2), cpToWin(playedCp2));
   if(Math.abs(diff2-diff1)>=50||ann2!==ann1){
     renderAnalysis(card, body, move, ann2, sfAfter2, diff2, acc2, true);
     if(ann2!==ann1) showAnnotationOnSquare(move.to, ann2);
