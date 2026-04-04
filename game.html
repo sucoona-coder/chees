@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>♟ ChessMaster Pro v4 — Stockfish 18</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>♟ ChessMaster Pro — Stockfish 18</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;1,300&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <script>
 (function(){
@@ -16,6 +16,7 @@
 </script>
 <style>
 :root {
+  /* Jeu — palette sombre (inchangée) */
   --bg:#1a1d1e;--bg2:#242728;--bg3:#2d3133;--bg4:#363b3d;
   --border:#3a3f42;--border2:#4d5356;
   --green:#81b64c;--green2:#6fa03d;--green3:#5c8a30;
@@ -25,47 +26,52 @@
   --sq-light:#eee8d5;--sq-dark:#739556;
   --sq-hl-l:#cdd26a;--sq-hl-d:#aaa23a;
   --radius:10px;--shadow:0 8px 32px rgba(0,0,0,0.5);
+  /* Home screen — palette claire (style index) */
+  --hbg:#f5f4f0;--hbg2:#fff;--hbg3:#f0ede8;
+  --htext:#1a1a18;--htext2:#5a5a54;--hdim:#9a9a90;
+  --hborder:#e0ddd6;
+  --hink:#1a1a18;--haccent:#2d6a4f;--haccent2:#1b4332;
+  --hgold:#a07830;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 .screen{display:none;min-height:100vh}
 .screen.active{display:flex}
 
-/* HOME */
-#home-screen{flex-direction:column;align-items:center;justify-content:center;gap:48px;padding:40px 20px;
-  background:radial-gradient(ellipse 60% 40% at 20% 20%,rgba(129,182,76,0.08) 0,transparent 70%),
-  radial-gradient(ellipse 50% 50% at 80% 80%,rgba(201,162,39,0.06) 0,transparent 70%),var(--bg);
-  position:relative;overflow:hidden}
-#home-screen::before{content:'♟';position:absolute;font-size:28rem;opacity:0.018;color:var(--green);
+/* HOME — style clair inspiré de l'index */
+#home-screen{flex-direction:column;align-items:center;justify-content:center;gap:40px;
+  padding:40px 24px;background:var(--hbg);position:relative;overflow:hidden}
+#home-screen::before{content:'♟';position:absolute;font-size:26rem;opacity:0.025;color:var(--haccent);
   top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;user-select:none}
-.home-logo{text-align:center}
-.home-logo h1{font-family:'DM Serif Display',serif;font-size:3.8rem;font-weight:400;color:var(--green);
-  letter-spacing:0.02em;line-height:1;filter:drop-shadow(0 0 40px rgba(129,182,76,0.35))}
-.home-logo h1 span{color:var(--gold)}
-.home-logo p{color:var(--dim);font-size:1rem;margin-top:10px;letter-spacing:0.04em}
-.home-logo .sf-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(201,162,39,0.1);
-  border:1px solid rgba(201,162,39,0.25);border-radius:20px;padding:4px 14px;
-  font-size:0.72rem;font-weight:700;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;margin-top:10px}
-.mode-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:660px;width:100%}
-.mode-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:26px 22px;
-  cursor:pointer;transition:all 0.22s cubic-bezier(.25,.8,.25,1);display:flex;flex-direction:column;gap:8px;
-  position:relative;overflow:hidden}
-.mode-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--c,transparent) 0,transparent 60%);opacity:0;transition:opacity 0.22s}
-.mode-card:hover{border-color:var(--c,var(--border2));transform:translateY(-3px) scale(1.01);
-  box-shadow:0 12px 40px rgba(0,0,0,0.5),0 0 0 1px var(--c,transparent)}
-.mode-card:hover::after{opacity:0.06}
-.mode-card .icon{font-size:2.2rem}
-.mode-card h3{font-family:'DM Serif Display',serif;font-size:1.15rem;color:var(--text)}
-.mode-card p{font-size:0.82rem;color:var(--dim);line-height:1.55}
-.card-badge{position:absolute;top:12px;right:12px;font-size:0.6rem;font-weight:700;letter-spacing:0.1em;
-  padding:3px 8px;border-radius:20px;text-transform:uppercase}
-.badge-new{background:rgba(129,182,76,0.15);color:var(--green);border:1px solid rgba(129,182,76,0.3)}
-.badge-ai{background:rgba(138,87,229,0.15);color:#a371f7;border:1px solid rgba(138,87,229,0.3)}
-.badge-sf{background:rgba(201,162,39,0.15);color:var(--gold);border:1px solid rgba(201,162,39,0.3)}
-.back-home{position:absolute;top:20px;left:20px;background:var(--bg2);border:1px solid var(--border);color:var(--dim);
-  padding:7px 14px;border-radius:8px;font-size:0.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;
-  transition:all 0.18s;text-decoration:none}
-.back-home:hover{border-color:var(--border2);color:var(--text)}
+/* Logo home */
+.home-logo{text-align:center;position:relative;z-index:1}
+.home-logo h1{font-family:'Fraunces',serif;font-size:3.6rem;font-weight:300;color:var(--hink);
+  letter-spacing:-0.03em;line-height:1.05;margin-bottom:10px}
+.home-logo h1 em{color:var(--haccent);font-style:italic}
+.home-logo p{color:var(--htext2);font-size:0.95rem;font-weight:300;line-height:1.7;margin-top:4px}
+.home-logo .sf-badge{display:inline-flex;align-items:center;gap:6px;
+  border:1px solid var(--hborder);border-radius:100px;padding:5px 16px;
+  font-size:0.7rem;font-weight:600;color:var(--hdim);letter-spacing:0.07em;
+  text-transform:uppercase;margin-top:12px;background:var(--hbg2)}
+/* Grille modes */
+.mode-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;max-width:640px;width:100%;position:relative;z-index:1}
+.mode-card{background:var(--hbg2);border:1px solid var(--hborder);border-radius:12px;padding:24px 20px;
+  cursor:pointer;transition:all 0.22s;display:flex;flex-direction:column;gap:7px;position:relative;overflow:hidden}
+.mode-card:hover{border-color:var(--haccent);transform:translateY(-2px);
+  box-shadow:0 16px 40px rgba(0,0,0,0.09)}
+.mode-card .icon{font-size:1.9rem}
+.mode-card h3{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:600;color:var(--hink);letter-spacing:-0.01em}
+.mode-card p{font-size:0.79rem;color:var(--htext2);line-height:1.6;font-weight:300}
+.card-badge{display:inline-block;position:static;font-size:0.58rem;font-weight:700;letter-spacing:0.1em;
+  padding:3px 9px;border-radius:100px;text-transform:uppercase;margin-top:4px;align-self:flex-start}
+.badge-new{background:rgba(45,106,79,0.08);color:var(--haccent);border:1px solid rgba(45,106,79,0.2)}
+.badge-ai{background:rgba(45,106,79,0.08);color:var(--haccent);border:1px solid rgba(45,106,79,0.2)}
+.badge-sf{background:rgba(160,120,48,0.08);color:var(--hgold);border:1px solid rgba(160,120,48,0.2)}
+.badge-edit{background:rgba(74,143,204,0.08);color:#4a8fcc;border:1px solid rgba(74,143,204,0.2)}
+.back-home{position:absolute;top:18px;left:18px;background:var(--hbg2);border:1px solid var(--hborder);
+  color:var(--hdim);padding:6px 14px;border-radius:8px;font-size:0.8rem;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all 0.18s;text-decoration:none;z-index:10}
+.back-home:hover{border-color:var(--hink);color:var(--hink)}
 
 /* ONLINE LOBBY */
 #online-screen{flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;background:var(--bg)}
@@ -368,6 +374,41 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .admin-btn-login:hover{background:#6fa03d}
 .admin-cancel{width:100%;background:transparent;border:1px solid #30363d;color:#555;padding:8px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;transition:all 0.18s}
 .admin-cancel:hover{border-color:#555;color:#8b949e}
+
+/* ÉDITEUR DE POSITION */
+.editor-overlay{position:fixed;inset:0;background:rgba(15,18,18,0.92);backdrop-filter:blur(12px);
+  z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.editor-overlay.show{display:flex}
+.editor-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;
+  padding:24px;max-width:480px;width:100%;box-shadow:var(--shadow)}
+.editor-box h2{font-family:'Fraunces',serif;font-size:1.4rem;color:var(--text);margin-bottom:6px;font-weight:600}
+.editor-box p.ed-sub{color:var(--dim);font-size:0.82rem;margin-bottom:18px}
+.editor-pieces{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;
+  background:var(--bg3);border-radius:10px;padding:10px;border:1px solid var(--border)}
+.ed-piece{width:40px;height:40px;border-radius:7px;display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;cursor:pointer;border:2px solid transparent;transition:all 0.15s;background:var(--bg4)}
+.ed-piece:hover{border-color:var(--green);background:var(--bg3)}
+.ed-piece.selected{border-color:var(--green);background:rgba(129,182,76,0.15)}
+.ed-piece.eraser{font-size:0.9rem;color:var(--dim)}
+.editor-turn{display:flex;gap:8px;margin-bottom:14px;align-items:center}
+.editor-turn label{font-size:0.75rem;color:var(--dim);font-weight:600;letter-spacing:0.06em;text-transform:uppercase}
+.ed-turn-btn{padding:6px 14px;border-radius:7px;border:1px solid var(--border);background:var(--bg3);
+  color:var(--dim);font-size:0.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.ed-turn-btn.active{background:var(--green);border-color:var(--green);color:#fff;font-weight:700}
+.editor-fen{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);
+  padding:9px 12px;border-radius:8px;font-size:0.8rem;font-family:monospace;outline:none;
+  transition:border-color 0.2s;margin-bottom:14px}
+.editor-fen:focus{border-color:var(--green)}
+.editor-actions{display:flex;gap:8px;flex-wrap:wrap}
+.ed-btn{padding:9px 16px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;
+  font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.18s}
+.ed-btn-primary{background:var(--green);color:#fff}
+.ed-btn-primary:hover{background:var(--green2)}
+.ed-btn-secondary{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.ed-btn-secondary:hover{border-color:var(--border2);color:var(--text)}
+.ed-btn-danger{background:rgba(200,64,64,0.15);color:var(--red2);border:1px solid rgba(200,64,64,0.25)}
+.ed-btn-danger:hover{background:rgba(200,64,64,0.25)}
+.editor-hint{font-size:0.72rem;color:var(--dimmer);text-align:center;margin-top:10px;font-style:italic}
 </style>
 </head>
 <body>
@@ -376,32 +417,34 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <div class="screen active" id="home-screen">
   <a class="back-home" href="index.html">← Accueil</a>
   <div class="home-logo">
-    <h1>♟ Chess<span>Master</span> Pro</h1>
+    <h1>Chess<em>Master</em> Pro</h1>
     <p>Jouez · Analysez · Progressez</p>
     <div class="sf-badge">⚡ Stockfish 18 · Elo 3500+</div>
   </div>
   <div class="mode-grid">
-    <div class="mode-card" style="--c:#c9a227" onclick="startGame('local')">
+    <div class="mode-card" onclick="startGame('local')">
       <div class="icon">⚔️</div>
       <h3>2 Joueurs Local</h3>
-      <p>Jouez face à face avec analyse IA, minuterie et théorie des ouvertures</p>
+      <p>Jouez face à face avec analyse IA complète, minuterie et théorie des ouvertures.</p>
+      <span class="card-badge badge-sf">Local</span>
     </div>
-    <div class="mode-card" style="--c:#81b64c" onclick="goOnline()">
-      <span class="card-badge badge-new">Nouveau</span>
+    <div class="mode-card" onclick="startGame('editor')">
+      <div class="icon">✏️</div>
+      <h3>Éditeur de Position</h3>
+      <p>Créez librement vos positions, chargez un FEN et jouez depuis n'importe quelle configuration.</p>
+      <span class="card-badge badge-edit">Nouveau</span>
+    </div>
+    <div class="mode-card" onclick="startGame('ai')">
+      <div class="icon">🤖</div>
+      <h3>Contre Stockfish</h3>
+      <p>Affrontez le moteur Stockfish 18. Choisissez votre niveau d'Elo — du débutant au maître.</p>
+      <span class="card-badge badge-sf">Stockfish 18</span>
+    </div>
+    <div class="mode-card" onclick="goOnline()">
       <div class="icon">🌐</div>
       <h3>Jouer en Ligne</h3>
-      <p>Invitez un ami avec un code de salon — aucun compte requis, connexion P2P</p>
-    </div>
-    <div class="mode-card" style="--c:#a371f7" onclick="startGame('ai')">
-      <span class="card-badge badge-sf">SF 18</span>
-      <div class="icon">🤖</div>
-      <h3>Contre Stockfish 18</h3>
-      <p>Moteur Stockfish 18 — le plus puissant au monde. 5 niveaux de difficulté.</p>
-    </div>
-    <div class="mode-card" style="--c:#4a8fcc" onclick="startGame('analysis')">
-      <div class="icon">📊</div>
-      <h3>Mode Analyse</h3>
-      <p>Explorez les positions avec commentaires IA, théorie et coups suggérés</p>
+      <p>Invitez un ami avec un code de salon — connexion P2P directe, sans compte.</p>
+      <span class="card-badge badge-new">En ligne</span>
     </div>
   </div>
 </div>
@@ -546,7 +589,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="right-panel">
       <div class="section-label" style="padding-top:4px">Analyse IA en direct</div>
       <div class="analysis-card" id="analysis-card">
-        <div class="analysis-body" id="analysis-body">Faites votre premier coup pour recevoir l'analyse IA…</div>
+        <div class="analysis-body" id="analysis-body">Faites votre premier coup pour recevoir l\'analyse IA…</div>
       </div>
       <div class="eval-graph-wrap">
         <div class="diff-label" style="font-size:0.62rem;font-weight:700;color:var(--dimmer);letter-spacing:0.14em;text-transform:uppercase;padding-bottom:7px;border-bottom:1px solid var(--border);margin-bottom:8px">Graphe d'évaluation</div>
@@ -1462,21 +1505,21 @@ function winToAccuracy(wb, wa){
   return Math.max(0,Math.min(100, 103.1668*Math.exp(-0.04354*loss)-3.1669));
 }
 
-function classifyByCpDiff(diff, move, moveNum, evalAfterCp){
+function classifyByCpDiff(diff, move, moveNum, evalAfterCp, isTheory){
   if(chess.in_checkmate()) return ANN.mate;
   if(move.promotion)       return ANN.promo;
   if(move.san&&move.san.includes('O-O')) return ANN.castle;
-  if(isTheoreticalMove(move)) return ANN.theory;
+  if(isTheory)             return ANN.theory;
+  // Tolérance si position très déséquilibrée (peu importe l'imprecision)
   var tol=1.0;
-  if(moveNum<=10) tol=2.0;
-  else if(Math.abs(evalAfterCp)>500) tol=1.5;
+  if(Math.abs(evalAfterCp)>800) tol=1.5;
   var d=diff/tol;
   if(d<10)  return ANN.best;
-  if(d<25)  return ANN.good;
-  if(d<50)  return ANN.correct;
-  if(d<100) return ANN.inaccurate;
-  if(d<200) return ANN.mistake;
-  if(d<400) return ANN.blunder;
+  if(d<30)  return ANN.good;
+  if(d<60)  return ANN.correct;
+  if(d<120) return ANN.inaccurate;
+  if(d<250) return ANN.mistake;
+  if(d<450) return ANN.blunder;
   return ANN.miss;
 }
 
@@ -1564,6 +1607,9 @@ async function requestAI(move, ann, evalBefore, evalAfter){
   hist.slice(0,-1).forEach(function(m){ tmpBefore.move(m); });
   var fenBefore=tmpBefore.fen();
   var fenAfter=chess.fen();
+  // Capturer isTheory MAINTENANT (avant les await) pour éviter que
+  // l'historique change pendant l'analyse asynchrone
+  var isTheory=isTheoreticalMove(move);
 
   // PASSE 1 rapide
   var sfBefore1=await sfEval(fenBefore, 200);
@@ -1599,7 +1645,7 @@ async function requestAI(move, ann, evalBefore, evalAfter){
   var bestCp1   = isW ?  sfBefore1 : -sfBefore1;
   var playedCp1 = isW ?  sfAfter1  : -sfAfter1;
   var diff1 = Math.max(0, bestCp1 - playedCp1);
-  var ann1=classifyByCpDiff(diff1, move, moveNum, sfAfter1);
+  var ann1=classifyByCpDiff(diff1, move, moveNum, sfAfter1, isTheory);
   var acc1=winToAccuracy(cpToWin(bestCp1), cpToWin(playedCp1));
   renderAnalysis(card, body, move, ann1, sfAfter1, diff1, acc1, false);
   if(myId!==analRequestId){ return; }
@@ -1615,7 +1661,7 @@ async function requestAI(move, ann, evalBefore, evalAfter){
   var bestCp2   = isW ?  sfBefore2 : -sfBefore2;
   var playedCp2 = isW ?  sfAfter2  : -sfAfter2;
   var diff2=Math.max(0, bestCp2 - playedCp2);
-  var ann2=classifyByCpDiff(diff2, move, moveNum, sfAfter2);
+  var ann2=classifyByCpDiff(diff2, move, moveNum, sfAfter2, isTheory);
   var acc2=winToAccuracy(cpToWin(bestCp2), cpToWin(playedCp2));
   if(Math.abs(diff2-diff1)>=50||ann2!==ann1){
     renderAnalysis(card, body, move, ann2, sfAfter2, diff2, acc2, true);
@@ -1888,7 +1934,11 @@ function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classL
 function goOnline(){showScreen('online-screen');}
 
 function startGame(mode){
-  gameMode=mode;chess=new Chess();
+  if(mode==='editor'){
+    openEditor();
+    return;
+  }
+    gameMode=mode;chess=new Chess();
   selSq=null;legalMoves=[];lastMove=null;aiRunning=false;evalHistory=[];aiThinking=false;
   document.querySelectorAll('.sq-ann').forEach(e=>e.remove());
   cheatClear();
@@ -1911,7 +1961,7 @@ function startGame(mode){
   const badge=document.getElementById('mode-badge');
   if(mode==='online'){badge.className='topbar-badge badge-online';badge.textContent='🌐 En ligne';}
   else if(mode==='ai'){badge.className='topbar-badge badge-ai-t';badge.textContent='🤖 vs Stockfish';}
-  else if(mode==='analysis'){badge.className='topbar-badge badge-ai-t';badge.textContent='📊 Analyse';}
+  else if(mode==='editor'){badge.className='topbar-badge badge-ai-t';badge.textContent='✏️ Éditeur';}
   else{badge.className='topbar-badge badge-local';badge.textContent='⚔️ Local';}
 
   document.getElementById('online-info-card').style.display=mode==='online'?'block':'none';
@@ -1944,6 +1994,230 @@ function resetGame(){
   if(gameMode==='online'&&myRoomCode){document.getElementById('online-info-card').style.display='block';document.getElementById('oi-room-code').textContent=myRoomCode;}
 }
 
+
+// ══════════════════════════════════════════════════════════
+// MODE ÉDITEUR DE POSITION
+// ══════════════════════════════════════════════════════════
+var editorActive=false;
+var edSelectedPiece=null; // ex: 'wK', 'bP', null=effacer
+var edTurn='w';
+var edBoard=null; // Chess() en mode éditeur
+
+var ED_PIECES=[
+  {code:'wK',sym:'♔'},{code:'wQ',sym:'♕'},{code:'wR',sym:'♖'},
+  {code:'wB',sym:'♗'},{code:'wN',sym:'♘'},{code:'wP',sym:'♙'},
+  {code:'bK',sym:'♚'},{code:'bQ',sym:'♛'},{code:'bR',sym:'♜'},
+  {code:'bB',sym:'♝'},{code:'bN',sym:'♞'},{code:'bP',sym:'♟'}
+];
+
+function edInit(){
+  var pal=document.getElementById('ed-pieces-palette');
+  if(!pal||pal.children.length>0) return;
+  ED_PIECES.forEach(function(p){
+    var btn=document.createElement('div');
+    btn.className='ed-piece';
+    btn.title=p.code;
+    btn.textContent=p.sym;
+    btn.style.color=p.code[0]==='w'?'#f0d9b5':'#1a1a1a';
+    if(p.code[0]==='w') btn.style.textShadow='0 1px 3px rgba(0,0,0,0.5)';
+    btn.onclick=function(){ edSelectPiece(p.code); };
+    pal.appendChild(btn);
+  });
+  // Bouton effacer
+  var era=document.createElement('div');
+  era.className='ed-piece eraser'; era.title='Effacer';
+  era.textContent='✕'; era.style.color='#e05555';
+  era.onclick=function(){ edSelectPiece(null); };
+  pal.appendChild(era);
+}
+
+function edSelectPiece(code){
+  edSelectedPiece=code;
+  document.querySelectorAll('.ed-piece').forEach(function(b){
+    b.classList.toggle('selected',
+      code===null ? b.classList.contains('eraser') : b.title===code
+    );
+  });
+}
+
+function edSetTurn(color){
+  edTurn=color;
+  document.getElementById('ed-turn-w').classList.toggle('active',color==='w');
+  document.getElementById('ed-turn-b').classList.toggle('active',color==='b');
+  edUpdateFenInput();
+}
+
+function edBuildFen(){
+  if(!edBoard) return 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
+  var b=edBoard.board();
+  var rows=[];
+  for(var r=0;r<8;r++){
+    var row=''; var empty=0;
+    for(var f=0;f<8;f++){
+      var p=b[r][f];
+      if(!p){ empty++; }
+      else{
+        if(empty>0){row+=empty;empty=0;}
+        var c=p.type; if(p.color==='w') c=c.toUpperCase();
+        row+=c;
+      }
+    }
+    if(empty>0) row+=empty;
+    rows.push(row);
+  }
+  return rows.join('/')+' '+edTurn+' KQkq - 0 1';
+}
+
+function edUpdateFenInput(){
+  var inp=document.getElementById('editor-fen-input');
+  if(inp) inp.value=edBuildFen();
+}
+
+function edPlacePiece(sq){
+  if(!edBoard) return;
+  if(edSelectedPiece===null){
+    edBoard.remove(sq);
+  } else {
+    edBoard.remove(sq);
+    var color=edSelectedPiece[0];
+    var type=edSelectedPiece[1].toLowerCase();
+    edBoard.put({type:type,color:color},sq);
+  }
+  edUpdateFenInput();
+  edRenderBoard();
+}
+
+function edRenderBoard(){
+  // Réutilise le render du jeu mais en mode éditeur
+  document.querySelectorAll('.sq').forEach(function(el){
+    var pw=el.querySelector('.piece-wrap');if(pw)el.removeChild(pw);
+    el.classList.remove('hl','selected','can-move','can-capture');
+  });
+  if(!edBoard) return;
+  edBoard.board().forEach(function(row,ri){
+    row.forEach(function(p,fi){
+      if(!p) return;
+      var el=document.querySelector('[data-sq="'+FILES[fi]+RANKS[ri]+'"]');
+      if(!el) return;
+      var w=document.createElement('div'); w.className='piece-wrap';
+      w.innerHTML=PIECES[p.color+p.type.toUpperCase()]||''; el.appendChild(w);
+    });
+  });
+}
+
+function openEditor(){
+  editorActive=true;
+  edInit();
+  // Charge la position initiale
+  edBoard=new Chess();
+  edTurn='w';
+  document.getElementById('ed-turn-w').classList.add('active');
+  document.getElementById('ed-turn-b').classList.remove('active');
+  edUpdateFenInput();
+  // Montre l'échiquier vide avec bouton éditeur
+  buildBoard();
+  edRenderBoard();
+  // Rend les cases cliquables en mode éditeur
+  document.querySelectorAll('.sq').forEach(function(el){
+    el.addEventListener('click', edSquareClick);
+    el.addEventListener('contextmenu', edSquareRightClick);
+  });
+  document.getElementById('editor-overlay').classList.add('show');
+}
+
+function edSquareClick(e){
+  if(!editorActive) return;
+  var sq=this.dataset.sq||e.currentTarget.dataset.sq;
+  edPlacePiece(sq);
+}
+function edSquareRightClick(e){
+  e.preventDefault();
+  if(!editorActive) return;
+  var sq=this.dataset.sq||e.currentTarget.dataset.sq;
+  if(edBoard) edBoard.remove(sq);
+  edUpdateFenInput(); edRenderBoard();
+}
+
+function edLoadFen(fen){
+  if(!fen||fen.length<10) return;
+  try{
+    var tmp=new Chess(fen);
+    edBoard=tmp;
+    // Extraire le trait depuis le FEN
+    var parts=fen.split(' ');
+    if(parts[1]==='b'){edTurn='b';document.getElementById('ed-turn-b').classList.add('active');document.getElementById('ed-turn-w').classList.remove('active');}
+    else{edTurn='w';document.getElementById('ed-turn-w').classList.add('active');document.getElementById('ed-turn-b').classList.remove('active');}
+    edRenderBoard();
+  }catch(e){}
+}
+
+function edStartFromPosition(){
+  if(!edBoard) return;
+  var fen=edBuildFen();
+  document.getElementById('editor-overlay').classList.remove('show');
+  editorActive=false;
+  // Nettoie les listeners éditeur
+  document.querySelectorAll('.sq').forEach(function(el){
+    el.removeEventListener('click',edSquareClick);
+    el.removeEventListener('contextmenu',edSquareRightClick);
+  });
+  // Lance le jeu depuis cette position
+  chess=new Chess(fen);
+  gameMode='editor';
+  selSq=null;legalMoves=[];lastMove=null;aiRunning=false;evalHistory=[];
+  document.querySelectorAll('.sq-ann').forEach(function(e){e.remove();});
+  cheatClear();
+  var cm=document.getElementById('chat-messages');if(cm)cm.innerHTML='';
+  document.getElementById('analysis-card').className='analysis-card';
+  document.getElementById('analysis-body').innerHTML='Faites votre premier coup pour recevoir l\'analyse IA…';
+  document.getElementById('eval-num').textContent='0.0';
+  document.getElementById('eval-bar').style.width='50%';
+  document.getElementById('move-history').innerHTML='';
+  document.getElementById('cap-white').textContent='—';document.getElementById('cap-black').textContent='—';
+  document.getElementById('adv-white').textContent='';document.getElementById('adv-black').textContent='';
+  document.getElementById('gameover-overlay').classList.remove('show');
+  document.getElementById('opening-bar').classList.add('hidden');
+  document.getElementById('depth-row').style.display='none';
+  document.getElementById('theory-next-wrap').style.display='none';
+  document.getElementById('summary-overlay').classList.remove('show');
+  document.getElementById('promo-overlay').classList.remove('show');
+  stopClock();initClocks();
+  var badge=document.getElementById('mode-badge');
+  badge.className='topbar-badge badge-ai-t';badge.textContent='✏️ Éditeur';
+  document.getElementById('online-info-card').style.display='none';
+  document.getElementById('difficulty-panel').style.display='none';
+  document.getElementById('time-presets-panel').style.display='block';
+  document.getElementById('name-white').textContent='Blancs';
+  document.getElementById('name-black').textContent='Noirs';
+  var cp=document.getElementById('cheat-panel');if(cp)cp.classList.add('visible');
+  boardFlipped=false;buildBoard();render();updateAll();
+  var cml=document.getElementById('chat-mode-label');if(cml)cml.textContent='Éditeur';
+  var chatDot=document.getElementById('chat-dot');if(chatDot)chatDot.style.background='var(--blue)';
+  addChatMsg('Position chargée depuis l\'éditeur. Bonne chance !','system');
+  showScreen('game-screen');
+}
+
+function edCopyFen(){
+  var fen=edBuildFen();
+  navigator.clipboard.writeText(fen).then(function(){
+    var btn=event.target; var orig=btn.textContent;
+    btn.textContent='✓ Copié !'; setTimeout(function(){btn.textContent=orig;},2000);
+  });
+}
+
+function edSetStartPos(){
+  edBoard=new Chess();
+  edTurn='w';
+  document.getElementById('ed-turn-w').classList.add('active');
+  document.getElementById('ed-turn-b').classList.remove('active');
+  edUpdateFenInput(); edRenderBoard();
+}
+
+function edClearBoard(){
+  edBoard=new Chess('8/8/8/8/8/8/8/8 w - - 0 1');
+  edUpdateFenInput(); edRenderBoard();
+}
+
 // ══════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════
@@ -1959,6 +2233,28 @@ window.onload=function(){
 };
 </script>
 
+
+<!-- ÉDITEUR DE POSITION -->
+<div class="editor-overlay" id="editor-overlay">
+  <div class="editor-box">
+    <h2>✏️ Éditeur de Position</h2>
+    <p class="ed-sub">Sélectionnez une pièce puis cliquez sur l'échiquier. Clic droit pour effacer.</p>
+    <div class="editor-pieces" id="ed-pieces-palette"></div>
+    <div class="editor-turn">
+      <label>Trait :</label>
+      <button class="ed-turn-btn active" id="ed-turn-w" onclick="edSetTurn('w')">⬜ Blancs</button>
+      <button class="ed-turn-btn" id="ed-turn-b" onclick="edSetTurn('b')">⬛ Noirs</button>
+    </div>
+    <input class="editor-fen" id="editor-fen-input" placeholder="Collez un FEN ici…" oninput="edLoadFen(this.value)">
+    <div class="editor-actions">
+      <button class="ed-btn ed-btn-primary" onclick="edStartFromPosition()">▶ Jouer cette position</button>
+      <button class="ed-btn ed-btn-secondary" onclick="edCopyFen()">📋 Copier FEN</button>
+      <button class="ed-btn ed-btn-secondary" onclick="edSetStartPos()">↺ Position initiale</button>
+      <button class="ed-btn ed-btn-danger" onclick="edClearBoard()">✕ Vider</button>
+    </div>
+    <p class="editor-hint">Double-clic sur une case pour effacer · Glisser-déposer bientôt disponible</p>
+  </div>
+</div>
 <!-- ADMIN LOGIN MODAL -->
 <div class="admin-overlay" id="admin-overlay">
   <div class="admin-box">
