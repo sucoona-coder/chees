@@ -3,310 +3,295 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>♟ ChessMaster Pro — Jouez aux Échecs</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>♟ ChessMaster Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;1,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#1a1d1e;--bg2:#242728;--bg3:#2d3133;
-  --green:#81b64c;--green2:#6fa03d;
-  --gold:#c9a227;--gold2:#e8bc40;
-  --text:#e8ebe6;--text2:#b8bcb5;--dim:#7d8480;
-  --border:#3a3f42;
+  --bg:#f5f4f0;--bg2:#fff;--bg3:#f0ede8;
+  --text:#1a1a18;--text2:#5a5a54;--dim:#9a9a90;
+  --border:#e0ddd6;
+  --ink:#1a1a18;--accent:#2d6a4f;--accent2:#1b4332;
+  --gold:#a07830;
+  --sq-l:#f0e8d0;--sq-d:#769656;
+  --radius:12px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
 
 /* NAV */
-nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 40px;display:flex;align-items:center;gap:20px;
-  background:rgba(26,29,30,0.85);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,0.06)}
-.nav-logo{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--green);margin-right:auto;letter-spacing:0.02em}
-.nav-logo span{color:var(--gold)}
-.nav-links{display:flex;gap:28px}
-.nav-links a{color:var(--dim);text-decoration:none;font-size:0.88rem;font-weight:500;transition:color 0.2s}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;gap:24px;
+  padding:18px 48px;background:rgba(245,244,240,0.9);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border)}
+.nav-logo{font-family:'Fraunces',serif;font-size:1.25rem;font-weight:600;color:var(--ink);margin-right:auto;letter-spacing:-0.01em}
+.nav-logo em{color:var(--accent);font-style:normal}
+.nav-links{display:flex;gap:32px}
+.nav-links a{color:var(--dim);text-decoration:none;font-size:0.85rem;font-weight:500;
+  letter-spacing:0.02em;transition:color 0.2s}
 .nav-links a:hover{color:var(--text)}
-.nav-cta{background:var(--green);color:#fff;border:none;padding:9px 22px;border-radius:8px;
-  font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:700;cursor:pointer;
-  text-decoration:none;transition:background 0.2s;letter-spacing:0.02em}
-.nav-cta:hover{background:var(--green2)}
+.nav-cta{background:var(--ink);color:#fff;border:none;padding:10px 24px;border-radius:8px;
+  font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;
+  text-decoration:none;transition:all 0.2s;letter-spacing:0.02em}
+.nav-cta:hover{background:var(--accent2);transform:translateY(-1px)}
 
 /* HERO */
 .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:100px 20px 60px;text-align:center;position:relative;overflow:hidden;
-  background:radial-gradient(ellipse 70% 50% at 50% 30%,rgba(129,182,76,0.07) 0,transparent 70%),
-  radial-gradient(ellipse 50% 60% at 80% 80%,rgba(201,162,39,0.05) 0,transparent 70%),var(--bg)}
-.hero::before{content:'♟';position:absolute;font-size:32rem;opacity:0.015;color:var(--green);
-  top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;user-select:none;animation:float 8s ease-in-out infinite}
-@keyframes float{0%,100%{transform:translate(-50%,-50%) rotate(-3deg)}50%{transform:translate(-50%,-52%) rotate(3deg)}}
-.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(129,182,76,0.1);
-  border:1px solid rgba(129,182,76,0.25);border-radius:20px;padding:5px 14px;
-  font-size:0.75rem;font-weight:700;color:var(--green);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:24px}
-.hero h1{font-family:'DM Serif Display',serif;font-size:5rem;font-weight:400;line-height:1.05;
-  color:var(--text);letter-spacing:0.02em;margin-bottom:20px}
-.hero h1 .accent{color:var(--green);filter:drop-shadow(0 0 40px rgba(129,182,76,0.4))}
-.hero h1 .gold{color:var(--gold)}
-.hero p{font-size:1.15rem;color:var(--dim);max-width:560px;line-height:1.75;margin-bottom:36px}
+  padding:120px 24px 80px;text-align:center;position:relative;overflow:hidden}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);
+  border-radius:100px;padding:5px 16px;font-size:0.72rem;font-weight:600;color:var(--dim);
+  letter-spacing:0.08em;text-transform:uppercase;margin-bottom:28px;background:var(--bg2)}
+.hero h1{font-family:'Fraunces',serif;font-size:5.5rem;font-weight:300;line-height:1;
+  color:var(--ink);letter-spacing:-0.03em;margin-bottom:22px;max-width:760px}
+.hero h1 em{color:var(--accent);font-style:italic}
+.hero p{font-size:1.05rem;color:var(--text2);max-width:480px;line-height:1.8;margin-bottom:40px;font-weight:300}
 .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-.btn-hero{padding:14px 32px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;
-  cursor:pointer;text-decoration:none;transition:all 0.22s;letter-spacing:0.02em;display:inline-flex;align-items:center;gap:8px}
-.btn-primary{background:var(--green);color:#fff;border:none;box-shadow:0 8px 30px rgba(129,182,76,0.3)}
-.btn-primary:hover{background:var(--green2);transform:translateY(-2px);box-shadow:0 12px 40px rgba(129,182,76,0.4)}
-.btn-secondary{background:transparent;color:var(--text);border:1px solid var(--border)}
-.btn-secondary:hover{border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.04)}
-.hero-stats{display:flex;gap:40px;justify-content:center;margin-top:56px;padding-top:40px;
-  border-top:1px solid var(--border)}
-.hero-stat .val{font-family:'DM Serif Display',serif;font-size:2.2rem;color:var(--green)}
-.hero-stat .lbl{font-size:0.75rem;color:var(--dim);letter-spacing:0.06em;text-transform:uppercase;margin-top:4px}
+.btn-primary{background:var(--ink);color:#fff;border:none;padding:15px 36px;border-radius:10px;
+  font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer;text-decoration:none;
+  transition:all 0.22s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,0.15)}
+.btn-secondary{background:transparent;color:var(--text);border:1px solid var(--border);padding:15px 36px;
+  border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:500;
+  cursor:pointer;text-decoration:none;transition:all 0.22s;display:inline-flex;align-items:center;gap:8px}
+.btn-secondary:hover{border-color:var(--text);background:var(--bg3)}
 
-/* BOARD PREVIEW */
-.board-preview{display:grid;grid-template-columns:repeat(8,42px);grid-template-rows:repeat(8,42px);
-  border:3px solid rgba(255,255,255,0.08);border-radius:4px;
-  box-shadow:0 32px 80px rgba(0,0,0,0.8),0 0 0 1px rgba(255,255,255,0.04);
-  margin:48px auto 0;position:relative;z-index:1}
-.bp-sq{width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
-.bp-sq.l{background:#eee8d5}.bp-sq.d{background:#739556}
-.bp-sq.hl{background:#cdd26a}
+/* MINI BOARD */
+.board-wrap{margin:64px auto 0;position:relative;z-index:1}
+.mini-board{display:grid;grid-template-columns:repeat(8,44px);grid-template-rows:repeat(8,44px);
+  border:1px solid var(--border);border-radius:8px;overflow:hidden;
+  box-shadow:0 32px 80px rgba(0,0,0,0.12),0 4px 16px rgba(0,0,0,0.06)}
+.bp-sq{width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+.bp-sq.l{background:var(--sq-l)}.bp-sq.d{background:var(--sq-d)}.bp-sq.hl{background:#cdd26a}
+
+/* STATS */
+.hero-stats{display:flex;gap:56px;justify-content:center;margin-top:64px;padding-top:48px;
+  border-top:1px solid var(--border)}
+.hero-stat .val{font-family:'Fraunces',serif;font-size:2.4rem;font-weight:600;color:var(--accent)}
+.hero-stat .lbl{font-size:0.72rem;color:var(--dim);letter-spacing:0.07em;text-transform:uppercase;margin-top:4px}
 
 /* FEATURES */
-.features{padding:100px 40px;max-width:1100px;margin:0 auto}
-.section-title{text-align:center;margin-bottom:60px}
-.section-title h2{font-family:'DM Serif Display',serif;font-size:2.8rem;color:var(--text);margin-bottom:12px}
-.section-title p{color:var(--dim);font-size:1rem;max-width:500px;margin:0 auto;line-height:1.7}
-.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.feature-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:28px 24px;
-  transition:all 0.22s;position:relative;overflow:hidden}
-.feature-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--c,transparent) 0,transparent 50%);opacity:0;transition:opacity 0.22s}
-.feature-card:hover{border-color:var(--c,var(--border));transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,0.5)}
-.feature-card:hover::before{opacity:0.06}
-.feature-icon{font-size:2.2rem;margin-bottom:14px}
-.feature-card h3{font-family:'DM Serif Display',serif;font-size:1.15rem;color:var(--text);margin-bottom:8px}
-.feature-card p{font-size:0.84rem;color:var(--dim);line-height:1.65}
+.section{padding:100px 48px;max-width:1100px;margin:0 auto}
+.section-hd{margin-bottom:56px}
+.section-hd h2{font-family:'Fraunces',serif;font-size:2.8rem;font-weight:300;color:var(--ink);
+  letter-spacing:-0.02em;margin-bottom:12px}
+.section-hd p{color:var(--text2);font-size:0.95rem;max-width:460px;line-height:1.75;font-weight:300}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.feat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:28px 24px;transition:all 0.22s}
+.feat-card:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,0.08);border-color:rgba(45,106,79,0.25)}
+.feat-icon{font-size:1.8rem;margin-bottom:14px}
+.feat-card h3{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:600;color:var(--ink);margin-bottom:7px}
+.feat-card p{font-size:0.82rem;color:var(--text2);line-height:1.65;font-weight:300}
 
 /* MODES */
-.modes{padding:0 40px 100px;max-width:1100px;margin:0 auto}
+.modes-section{padding:0 48px 100px;max-width:1100px;margin:0 auto}
 .modes-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-.mode-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:30px;
-  cursor:pointer;text-decoration:none;display:flex;align-items:flex-start;gap:18px;
+.mode-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:32px 28px;cursor:pointer;text-decoration:none;display:flex;align-items:flex-start;gap:20px;
   transition:all 0.22s;color:var(--text)}
-.mode-card:hover{border-color:var(--c,var(--border));transform:translateY(-2px);box-shadow:0 16px 40px rgba(0,0,0,0.5)}
-.mode-icon{font-size:2.5rem;flex-shrink:0}
-.mode-card h3{font-family:'DM Serif Display',serif;font-size:1.2rem;margin-bottom:6px}
-.mode-card p{font-size:0.83rem;color:var(--dim);line-height:1.6}
-.mode-badge{display:inline-block;font-size:0.6rem;font-weight:800;letter-spacing:0.1em;padding:3px 9px;
-  border-radius:20px;text-transform:uppercase;margin-top:8px}
-.badge-new{background:rgba(129,182,76,0.15);color:var(--green);border:1px solid rgba(129,182,76,0.3)}
-.badge-ai{background:rgba(138,87,229,0.15);color:#a371f7;border:1px solid rgba(138,87,229,0.3)}
-.badge-sf{background:rgba(201,162,39,0.15);color:var(--gold);border:1px solid rgba(201,162,39,0.3)}
+.mode-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 16px 40px rgba(0,0,0,0.09)}
+.mode-icon{font-size:2rem;width:52px;height:52px;background:var(--bg3);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--border)}
+.mode-card h3{font-family:'Fraunces',serif;font-size:1.15rem;font-weight:600;margin-bottom:6px;color:var(--ink)}
+.mode-card p{font-size:0.82rem;color:var(--text2);line-height:1.65;font-weight:300}
+.mode-chip{display:inline-block;font-size:0.6rem;font-weight:700;letter-spacing:0.1em;padding:3px 9px;
+  border-radius:100px;text-transform:uppercase;margin-top:10px;
+  background:rgba(45,106,79,0.08);color:var(--accent);border:1px solid rgba(45,106,79,0.2)}
+.mode-chip.gold{background:rgba(160,120,48,0.08);color:var(--gold);border-color:rgba(160,120,48,0.2)}
 
-/* ENGINE SHOWCASE */
-.engine-section{padding:80px 40px;background:rgba(0,0,0,0.2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
-.engine-inner{max-width:900px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
-.engine-text h2{font-family:'DM Serif Display',serif;font-size:2.4rem;color:var(--text);margin-bottom:14px}
-.engine-text p{color:var(--dim);line-height:1.75;margin-bottom:20px;font-size:0.95rem}
-.engine-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(201,162,39,0.1);
-  border:1px solid rgba(201,162,39,0.25);border-radius:8px;padding:8px 16px;margin-bottom:20px}
-.engine-badge span{font-size:0.8rem;font-weight:700;color:var(--gold)}
-.elo-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center}
-.elo-val{font-family:'DM Serif Display',serif;font-size:3.5rem;color:var(--gold);line-height:1;
-  filter:drop-shadow(0 0 30px rgba(201,162,39,0.4))}
-.elo-lbl{font-size:0.75rem;color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;margin:8px 0 16px}
-.elo-bars{display:flex;flex-direction:column;gap:8px;margin-top:16px;border-top:1px solid var(--border);padding-top:16px}
-.elo-row{display:flex;align-items:center;gap:10px;font-size:0.78rem}
-.elo-name{width:80px;color:var(--dim);text-align:right}
-.elo-bar-bg{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+/* ENGINE */
+.engine-wrap{background:var(--ink);padding:80px 48px;margin:0 48px;border-radius:20px}
+.engine-inner{max-width:860px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.engine-text h2{font-family:'Fraunces',serif;font-size:2.4rem;font-weight:300;color:#fff;
+  letter-spacing:-0.02em;margin-bottom:14px;line-height:1.1}
+.engine-text p{color:rgba(255,255,255,0.55);line-height:1.8;margin-bottom:16px;font-size:0.9rem;font-weight:300}
+.engine-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,0.15);
+  border-radius:100px;padding:5px 14px;font-size:0.72rem;font-weight:600;color:rgba(255,255,255,0.7);
+  letter-spacing:0.08em;text-transform:uppercase;margin-bottom:20px}
+.elo-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  border-radius:var(--radius);padding:28px;text-align:center}
+.elo-val{font-family:'Fraunces',serif;font-size:3.8rem;font-weight:600;color:#fff;line-height:1}
+.elo-lbl{font-size:0.72rem;color:rgba(255,255,255,0.4);letter-spacing:0.1em;text-transform:uppercase;margin:8px 0 20px}
+.elo-bars{display:flex;flex-direction:column;gap:10px;border-top:1px solid rgba(255,255,255,0.08);padding-top:18px}
+.elo-row{display:flex;align-items:center;gap:10px;font-size:0.75rem}
+.elo-name{width:76px;color:rgba(255,255,255,0.4);text-align:right;font-size:0.72rem}
+.elo-bar-bg{flex:1;height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden}
 .elo-bar-fill{height:100%;border-radius:3px;transition:width 1.5s ease}
-.elo-score{width:40px;font-weight:700;font-size:0.72rem}
+.elo-score{width:42px;font-weight:700;font-size:0.7rem;color:rgba(255,255,255,0.6)}
+
+/* CTA */
+.cta-section{text-align:center;padding:100px 48px}
+.cta-section h2{font-family:'Fraunces',serif;font-size:3.2rem;font-weight:300;letter-spacing:-0.02em;
+  color:var(--ink);margin-bottom:14px}
+.cta-section p{color:var(--text2);margin-bottom:36px;font-size:0.95rem;font-weight:300}
 
 /* FOOTER */
-footer{padding:40px;text-align:center;border-top:1px solid var(--border)}
-footer p{color:var(--dimmer,#555a57);font-size:0.82rem}
-footer a{color:var(--green);text-decoration:none}
+footer{padding:36px 48px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+footer p{color:var(--dim);font-size:0.8rem}
+footer a{color:var(--accent);text-decoration:none}
 
 @media(max-width:900px){
-  .hero h1{font-size:3rem}
+  .hero h1{font-size:3.4rem}
   .features-grid{grid-template-columns:1fr 1fr}
   .engine-inner{grid-template-columns:1fr}
   .modes-grid{grid-template-columns:1fr}
+  .engine-wrap{margin:0 16px}
+  nav{padding:16px 20px}
 }
 @media(max-width:600px){
   .features-grid{grid-template-columns:1fr}
-  .hero h1{font-size:2.2rem}
-  nav{padding:12px 16px}
+  .hero h1{font-size:2.4rem}
   .nav-links{display:none}
+  .hero-stats{gap:28px}
+  .section,.modes-section{padding-left:20px;padding-right:20px}
 }
 </style>
 </head>
 <body>
 
 <nav>
-  <div class="nav-logo">♟ Chess<span>Master</span> <span style="color:var(--gold)">Pro</span></div>
+  <div class="nav-logo">♟ Chess<em>Master</em> Pro</div>
   <div class="nav-links">
     <a href="#features">Fonctionnalités</a>
-    <a href="#modes">Modes</a>
+    <a href="#modes">Modes de jeu</a>
     <a href="#engine">Moteur</a>
   </div>
-  <a class="nav-cta" href="game.html">🎮 Jouer maintenant</a>
+  <a class="nav-cta" href="game.html">Jouer maintenant →</a>
 </nav>
 
-<!-- HERO -->
 <section class="hero">
-  <div class="hero-badge">✦ Stockfish 18 · Analyse IA · Gratuit</div>
-  <h1>Jouez aux Échecs<br>comme un <span class="accent">Pro</span></h1>
-  <p>ChessMaster Pro propulse vos parties avec le moteur Stockfish 18, l'analyse IA en direct, la théorie des ouvertures et le jeu en ligne P2P — le tout sans inscription.</p>
+  <div class="hero-tag">✦ Stockfish 18 · Analyse IA · Gratuit</div>
+  <h1>Les échecs,<br><em>réinventés.</em></h1>
+  <p>Jouez, analysez, créez vos propres positions. Propulsé par Stockfish 18 directement dans votre navigateur.</p>
   <div class="hero-btns">
-    <a class="btn-hero btn-primary" href="game.html">♟ Jouer maintenant</a>
-    <a class="btn-hero btn-secondary" href="#modes">Découvrir les modes →</a>
+    <a class="btn-primary" href="game.html">♟ Lancer une partie</a>
+    <a class="btn-secondary" href="game.html?mode=editor">✏ Créer une position</a>
   </div>
-
-  <!-- Mini board decoration -->
-  <div class="board-preview" id="mini-board"></div>
-
+  <div class="board-wrap">
+    <div class="mini-board" id="mini-board"></div>
+  </div>
   <div class="hero-stats">
-    <div class="hero-stat"><div class="val">3500+</div><div class="lbl">Elo Stockfish</div></div>
-    <div class="hero-stat"><div class="val">40+</div><div class="lbl">Ouvertures</div></div>
+    <div class="hero-stat"><div class="val">3542</div><div class="lbl">Elo Stockfish 18</div></div>
     <div class="hero-stat"><div class="val">4</div><div class="lbl">Modes de jeu</div></div>
-    <div class="hero-stat"><div class="val">0€</div><div class="lbl">100% Gratuit</div></div>
+    <div class="hero-stat"><div class="val">100%</div><div class="lbl">Gratuit & local</div></div>
   </div>
 </section>
 
-<!-- FEATURES -->
-<section class="features" id="features">
-  <div class="section-title">
-    <h2>Tout ce qu'il vous faut</h2>
-    <p>Un expérience d'échecs complète directement dans votre navigateur, sans installation.</p>
+<section class="section" id="features">
+  <div class="section-hd">
+    <h2>Tout ce dont vous avez besoin.</h2>
+    <p>Une plateforme complète pour progresser, explorer et s'amuser aux échecs.</p>
   </div>
   <div class="features-grid">
-    <div class="feature-card" style="--c:rgba(201,162,39,0.4)">
-      <div class="feature-icon">⚡</div>
-      <h3>Stockfish 18</h3>
-      <p>Le moteur d'échecs le plus puissant au monde, Elo 3500+. Analyse chaque position en quelques millisecondes.</p>
+    <div class="feat-card">
+      <div class="feat-icon">🤖</div>
+      <h3>Analyse IA en temps réel</h3>
+      <p>Stockfish 18 analyse chaque coup — précision, gaffes, coups brillants — avec annotations immédiates.</p>
     </div>
-    <div class="feature-card" style="--c:rgba(129,182,76,0.4)">
-      <div class="feature-icon">🧠</div>
-      <h3>Analyse IA en direct</h3>
-      <p>Commentaires intelligents après chaque coup — annotations, évaluation, graphe de la partie.</p>
+    <div class="feat-card">
+      <div class="feat-icon">✏️</div>
+      <h3>Éditeur de position</h3>
+      <p>Placez librement des pièces, choisissez qui joue, chargez ou sauvegardez n'importe quelle position FEN.</p>
     </div>
-    <div class="feature-card" style="--c:rgba(138,87,229,0.4)">
-      <div class="feature-icon">📚</div>
+    <div class="feat-card">
+      <div class="feat-icon">📖</div>
       <h3>Théorie des ouvertures</h3>
-      <p>40+ ouvertures détectées automatiquement avec conseils, ECO et coups théoriques suggérés.</p>
+      <p>Base ECO intégrée — reconnaît les ouvertures en temps réel et suggère les coups théoriques.</p>
     </div>
-    <div class="feature-card" style="--c:rgba(74,143,204,0.4)">
-      <div class="feature-icon">🌐</div>
+    <div class="feat-card">
+      <div class="feat-icon">🌐</div>
       <h3>Multijoueur P2P</h3>
-      <p>Invitez un ami avec un simple code de salon — connexion directe, aucun serveur, aucun compte requis.</p>
+      <p>Invitez un ami avec un code de salon. Connexion directe, sans compte ni serveur.</p>
     </div>
-    <div class="feature-card" style="--c:rgba(224,85,85,0.4)">
-      <div class="feature-icon">⏱</div>
+    <div class="feat-card">
+      <div class="feat-icon">⏱</div>
       <h3>Contrôle du temps</h3>
-      <p>Bullet (1min), Blitz (3min), Rapide (10min) ou illimité — avec minuterie visuelle et alertes.</p>
+      <p>Bullet, Blitz, Rapide ou illimité — avec minuterie visuelle et alertes de temps.</p>
     </div>
-    <div class="feature-card" style="--c:rgba(201,162,39,0.4)">
-      <div class="feature-icon">📊</div>
+    <div class="feat-card">
+      <div class="feat-icon">📊</div>
       <h3>Bilan de partie</h3>
       <p>Précision, gaffes, coups brillants, courbe d'évaluation — un rapport complet après chaque partie.</p>
     </div>
   </div>
 </section>
 
-<!-- MODES -->
-<section class="modes" id="modes">
-  <div class="section-title">
-    <h2>Choisissez votre mode</h2>
-    <p>Quatre façons de jouer, chacune avec ses outils et son ambiance.</p>
+<section class="modes-section" id="modes">
+  <div class="section-hd">
+    <h2>Choisissez votre mode.</h2>
+    <p>Quatre façons de jouer, chacune avec ses outils.</p>
   </div>
   <div class="modes-grid">
-    <a class="mode-card" href="game.html?mode=local" style="--c:rgba(201,162,39,0.5)">
+    <a class="mode-card" href="game.html?mode=local">
       <div class="mode-icon">⚔️</div>
       <div>
         <h3>2 Joueurs Local</h3>
         <p>Jouez face à face avec analyse IA complète, minuterie et théorie des ouvertures.</p>
+        <span class="mode-chip gold">Local</span>
       </div>
     </a>
-    <a class="mode-card" href="game.html?mode=online" style="--c:rgba(129,182,76,0.5)">
-      <div class="mode-icon">🌐</div>
+    <a class="mode-card" href="game.html?mode=editor">
+      <div class="mode-icon">✏️</div>
       <div>
-        <h3>Jouer en Ligne</h3>
-        <p>Invitez un ami avec un code de salon. Connexion P2P directe, sans compte.</p>
-        <span class="mode-badge badge-new">Nouveau</span>
+        <h3>Éditeur de Position</h3>
+        <p>Créez librement vos positions, chargez un FEN et jouez depuis n'importe quelle configuration.</p>
+        <span class="mode-chip">Nouveau</span>
       </div>
     </a>
-    <a class="mode-card" href="game.html?mode=ai" style="--c:rgba(138,87,229,0.5)">
+    <a class="mode-card" href="game.html?mode=ai">
       <div class="mode-icon">🤖</div>
       <div>
         <h3>Contre Stockfish</h3>
         <p>Affrontez le moteur Stockfish 18. Choisissez votre niveau d'Elo — du débutant au maître.</p>
-        <span class="mode-badge badge-sf">Stockfish 18</span>
+        <span class="mode-chip gold">Stockfish 18</span>
       </div>
     </a>
-    <a class="mode-card" href="game.html?mode=analysis" style="--c:rgba(74,143,204,0.5)">
-      <div class="mode-icon">📊</div>
+    <a class="mode-card" href="game.html?mode=online">
+      <div class="mode-icon">🌐</div>
       <div>
-        <h3>Mode Analyse</h3>
-        <p>Explorez les positions avec commentaires IA, théorie et coups suggérés par Stockfish.</p>
-        <span class="mode-badge badge-ai">IA</span>
+        <h3>Jouer en Ligne</h3>
+        <p>Invitez un ami avec un code de salon. Connexion P2P directe, sans compte.</p>
+        <span class="mode-chip">En ligne</span>
       </div>
     </a>
   </div>
 </section>
 
-<!-- ENGINE SECTION -->
-<section class="engine-section" id="engine">
-  <div class="engine-inner">
-    <div class="engine-text">
-      <div class="engine-badge"><span>⚡ Stockfish 18 intégré</span></div>
-      <h2>Le meilleur moteur<br>d'échecs au monde</h2>
-      <p>Stockfish 18 est le moteur open-source le plus fort jamais créé, utilisé par Lichess et Chess.com pour leurs analyses. Il calcule des millions de positions par seconde grâce à NNUE (réseau neuronal).</p>
-      <p>Dans ChessMaster Pro, il tourne directement dans votre navigateur via WebAssembly — aucun serveur requis.</p>
-    </div>
-    <div class="elo-card" id="elo-card">
-      <div class="elo-val" id="elo-counter">0</div>
-      <div class="elo-lbl">Elo Stockfish 18</div>
-      <div class="elo-bars">
-        <div class="elo-row">
-          <span class="elo-name">Débutant</span>
-          <div class="elo-bar-bg"><div class="elo-bar-fill" style="width:8%;background:#3fb950"></div></div>
-          <span class="elo-score" style="color:#3fb950">800</span>
-        </div>
-        <div class="elo-row">
-          <span class="elo-name">Club</span>
-          <div class="elo-bar-bg"><div class="elo-bar-fill" style="width:38%;background:#81b64c"></div></div>
-          <span class="elo-score" style="color:#81b64c">1600</span>
-        </div>
-        <div class="elo-row">
-          <span class="elo-name">Expert</span>
-          <div class="elo-bar-bg"><div class="elo-bar-fill" style="width:58%;background:#c9a227"></div></div>
-          <span class="elo-score" style="color:#c9a227">2200</span>
-        </div>
-        <div class="elo-row">
-          <span class="elo-name">GM</span>
-          <div class="elo-bar-bg"><div class="elo-bar-fill" style="width:78%;background:#e05555"></div></div>
-          <span class="elo-score" style="color:#e05555">2700</span>
-        </div>
-        <div class="elo-row">
-          <span class="elo-name">Stockfish</span>
-          <div class="elo-bar-bg"><div class="elo-bar-fill" style="width:100%;background:#a371f7"></div></div>
-          <span class="elo-score" style="color:#a371f7">3500+</span>
+<div style="max-width:1100px;margin:0 auto 100px;padding:0 48px">
+  <div class="engine-wrap" id="engine">
+    <div class="engine-inner">
+      <div class="engine-text">
+        <div class="engine-chip">⚡ Stockfish 18 intégré</div>
+        <h2>Le meilleur moteur d'échecs au monde.</h2>
+        <p>Stockfish 18 est le moteur open-source le plus fort jamais créé, utilisé par Lichess et Chess.com pour leurs analyses.</p>
+        <p>Il tourne directement dans votre navigateur via WebAssembly — aucun serveur requis.</p>
+      </div>
+      <div class="elo-card" id="elo-card">
+        <div class="elo-val" id="elo-counter">0</div>
+        <div class="elo-lbl">Elo Stockfish 18</div>
+        <div class="elo-bars">
+          <div class="elo-row"><span class="elo-name">Débutant</span><div class="elo-bar-bg"><div class="elo-bar-fill" style="width:8%;background:#3fb950"></div></div><span class="elo-score" style="color:#3fb950">800</span></div>
+          <div class="elo-row"><span class="elo-name">Club</span><div class="elo-bar-bg"><div class="elo-bar-fill" style="width:38%;background:#81b64c"></div></div><span class="elo-score" style="color:#81b64c">1600</span></div>
+          <div class="elo-row"><span class="elo-name">Expert</span><div class="elo-bar-bg"><div class="elo-bar-fill" style="width:60%;background:#c9a227"></div></div><span class="elo-score" style="color:#c9a227">2200</span></div>
+          <div class="elo-row"><span class="elo-name">GM</span><div class="elo-bar-bg"><div class="elo-bar-fill" style="width:78%;background:#e05555"></div></div><span class="elo-score" style="color:#e05555">2700</span></div>
+          <div class="elo-row"><span class="elo-name">Stockfish</span><div class="elo-bar-bg"><div class="elo-bar-fill" style="width:100%;background:rgba(255,255,255,0.6)"></div></div><span class="elo-score" style="color:rgba(255,255,255,0.6)">3500+</span></div>
         </div>
       </div>
     </div>
   </div>
-</section>
+</div>
 
-<!-- CTA FINAL -->
-<section style="padding:100px 40px;text-align:center;
-  background:radial-gradient(ellipse 60% 60% at 50% 50%,rgba(129,182,76,0.06) 0,transparent 70%)">
-  <h2 style="font-family:'DM Serif Display',serif;font-size:3rem;margin-bottom:16px">Prêt à jouer ?</h2>
-  <p style="color:var(--dim);margin-bottom:32px;font-size:1rem">Gratuit · Sans inscription · Directement dans le navigateur</p>
-  <a class="btn-hero btn-primary" href="game.html" style="font-size:1.05rem;padding:16px 40px">♟ Lancer une partie</a>
+<section class="cta-section">
+  <h2>Prêt à jouer ?</h2>
+  <p>Gratuit · Sans inscription · Directement dans le navigateur</p>
+  <a class="btn-primary" href="game.html" style="margin:0 auto;font-size:1rem;padding:16px 44px">♟ Lancer une partie</a>
 </section>
 
 <footer>
-  <p>♟ ChessMaster Pro · Propulsé par <a href="https://stockfishchess.org" target="_blank">Stockfish 18</a> · Gratuit & Open Source</p>
+  <p>♟ ChessMaster Pro · Propulsé par <a href="https://stockfishchess.org" target="_blank">Stockfish 18</a></p>
+  <p>Gratuit & Open Source</p>
 </footer>
 
 <script>
-// Mini board
 const INIT=[
   ['bR','bN','bB','bQ','bK','bB','bN','bR'],
   ['bP','bP','bP','bP','bP','bP','bP','bP'],
@@ -317,19 +302,18 @@ const INIT=[
   ['wP','wP','wP','wP',null,'wP','wP','wP'],
   ['wR','wN','wB','wQ','wK','wB',null,'wR']
 ];
-const SYM_MAP={wK:'♔',wQ:'♕',wR:'♖',wB:'♗',wN:'♘',wP:'♙',bK:'♚',bQ:'♛',bR:'♜',bB:'♝',bN:'♞',bP:'♟'};
+const SYM={wK:'♔',wQ:'♕',wR:'♖',wB:'♗',wN:'♘',wP:'♙',bK:'♚',bQ:'♛',bR:'♜',bB:'♝',bN:'♞',bP:'♟'};
 const board=document.getElementById('mini-board');
 const HL=[[4,4],[5,5],[3,3],[2,4]];
 INIT.forEach((row,r)=>row.forEach((p,f)=>{
   const div=document.createElement('div');
   div.className='bp-sq '+((r+f)%2===0?'l':'d');
-  const isHl=HL.some(([hr,hf])=>hr===r&&hf===f);
-  if(isHl)div.classList.add('hl');
-  if(p){div.textContent=SYM_MAP[p];div.style.color=p[0]==='w'?'#f0d9b5':'#1a1410';}
+  if(HL.some(([hr,hf])=>hr===r&&hf===f))div.classList.add('hl');
+  if(p){div.textContent=SYM[p];div.style.color=p[0]==='w'?'#3a2a14':'#1a1410';}
   board.appendChild(div);
 }));
 
-// Elo counter animation
+// Elo counter
 const observer=new IntersectionObserver(entries=>{
   if(entries[0].isIntersecting){
     let n=0;const target=3542;const step=Math.ceil(target/80);
@@ -339,9 +323,9 @@ const observer=new IntersectionObserver(entries=>{
 },{threshold:0.3});
 observer.observe(document.getElementById('elo-card'));
 
-// URL params → redirect to game with mode
+// Store mode on click
 document.querySelectorAll('a[href^="game.html"]').forEach(a=>{
-  a.addEventListener('click',e=>{
+  a.addEventListener('click',()=>{
     const url=new URL(a.href,location.href);
     const mode=url.searchParams.get('mode');
     if(mode)sessionStorage.setItem('chessStartMode',mode);
