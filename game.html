@@ -33,6 +33,39 @@
   --hink:#1a1a18;--haccent:#2d6a4f;--haccent2:#1b4332;
   --hgold:#a07830;
 }
+/* ── THÈME CLAIR (game screen) ── */
+body.theme-light {
+  --bg:#f5f4f0;--bg2:#ffffff;--bg3:#eeebe5;--bg4:#e4e0d8;
+  --border:#d8d4cc;--border2:#c0bbb0;
+  --text:#1a1a18;--text2:#4a4a45;--dim:#888880;--dimmer:#b0aea8;
+  --sq-light:#f0e8d0;--sq-dark:#769656;
+  --sq-hl-l:#cdd26a;--sq-hl-d:#aaa23a;
+  --shadow:0 4px 20px rgba(0,0,0,0.12);
+}
+body.theme-light .game-topbar{background:#f0ede8;border-color:#d8d4cc;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+body.theme-light .left-panel,body.theme-light .right-panel{background:rgba(0,0,0,0.03)}
+body.theme-light .lobby-box,body.theme-light .analysis-card,body.theme-light .player-bar,
+body.theme-light .opening-box,body.theme-light .eval-graph-wrap,body.theme-light .time-presets,
+body.theme-light .difficulty-selector,body.theme-light .export-card,
+body.theme-light .chat-panel,body.theme-light .online-info-card{background:var(--bg2);border-color:var(--border)}
+body.theme-light .topbar-btn{background:#e8e5de;border-color:#d0cdc6;color:#4a4a45}
+body.theme-light .topbar-btn:hover{color:#1a1a18;border-color:#aaa}
+body.theme-light .cheat-panel{background:#f8f6f2;border-color:#d8d4cc}
+body.theme-light .cheat-btn{background:#eeebe5;border-color:#d0cdc6;color:#4a4a45}
+body.theme-light #status-msg{background:#f0ede8;border-color:#d8d4cc}
+body.theme-light .g-btn{background:#f0ede8;border-color:#d8d4cc;color:#4a4a45}
+body.theme-light .move-san:hover{background:rgba(0,0,0,0.05)}
+body.theme-light .move-row:nth-child(even){background:rgba(0,0,0,0.03)}
+body.theme-light .chat-messages{background:var(--bg2)}
+body.theme-light .chat-input{background:#f0ede8;color:var(--text)}
+body.theme-light .editor-box{background:var(--bg2)}
+body.theme-light .ed-piece{background:#e8e5de}
+body.theme-light .editor-fen{background:#f0ede8;border-color:var(--border);color:var(--text)}
+/* Toggle btn */
+.theme-toggle{background:transparent;border:1px solid var(--border);color:var(--dim);
+  padding:5px 10px;border-radius:7px;font-size:0.85rem;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all 0.18s;line-height:1}
+.theme-toggle:hover{border-color:var(--border2);color:var(--text)}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 .screen{display:none;min-height:100vh}
@@ -490,6 +523,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <button class="topbar-btn" onclick="resetGame()">↺ Reset</button>
     <button class="topbar-btn" onclick="showScreen('home-screen')">⌂ Menu</button>
     <div id="engine-badge" style="font-size:0.68rem;font-weight:700;letter-spacing:0.06em;padding:5px 11px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);color:var(--dimmer);white-space:nowrap;">⏳ Moteur…</div>
+    <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Changer de thème">🌙</button>
   </div>
   <div class="game-layout">
     <!-- LEFT -->
@@ -1564,14 +1598,15 @@ function renderAnalysis(card, body, move, ann, sfAfterCp, diff, accuracy, isRefi
   else if(ann===ANN.castle)      main='Roque — roi en sécurité, tours actives.';
   else if(ann===ANN.theory)      main=piece+captured+'. Coup de théorie.'+check;
   else                           main=piece+captured+'.'+check+' '+getMoveContext(move,ann,diff,sfAfterCp);
-  // sfAfterCp = score UCI = point de vue Blancs
-  // Éval affiché = sfAfterCp directement (positif = avantage Blanc)
-  var evalForDisplay=sfAfterCp;
-  var evalPawns=(evalForDisplay/100).toFixed(2);
+  // sfAfterCp = score SPOV de l'adversaire (celui qui joue dans fenAfter)
+  // Pour afficher positif=avantage Blanc (convention universelle) :
+  //   Si Blanc vient de jouer → sfAfter vu par Noirs → inverser pour avoir vue Blancs
+  //   Si Noirs vient de jouer → sfAfter vu par Blancs → garder
+  var evalWhite = isWhiteMove ? -sfAfterCp : sfAfterCp;
+  var evalForDisplay=evalWhite;
+  var evalPawns=(Math.abs(evalForDisplay)/100).toFixed(2);
   var evalSign=evalForDisplay>=0?'+':'';
-  // Couleur du point de vue du joueur actif
-  var playerAdv=isWhiteMove?evalForDisplay:-evalForDisplay;
-  var evalColor=playerAdv>100?'var(--green)':playerAdv<-100?'var(--red2)':'var(--text2)';
+  var evalColor=evalForDisplay>100?'var(--green)':evalForDisplay<-100?'var(--red2)':'var(--text2)';
   var accColor=accuracy>=85?'var(--green)':accuracy>=65?'var(--gold)':'var(--red2)';
   var diffPawns=(diff/100).toFixed(2);
   var refinedDot=isRefined?'<span style="font-size:0.6rem;color:var(--green);margin-left:4px">● affiné</span>':'';
@@ -1641,9 +1676,16 @@ async function requestAI(move, ann, evalBefore, evalAfter){
   //   Noir gaffe              : sfBefore=+50, sfAfter=+300 → bestCp=-50, playedCp=-300
   //                             diff = -50 - (-300) = 250cp ✓
 
-  var isW = (move.color === 'w');
-  var bestCp1   = isW ?  sfBefore1 : -sfBefore1;
-  var playedCp1 = isW ?  sfAfter1  : -sfAfter1;
+  // Score UCI = SPOV (Side Point Of View) :
+  // sfBefore = eval POUR le joueur actif (c'est son tour dans fenBefore)
+  // sfAfter  = eval POUR l'adversaire (c'est son tour dans fenAfter)
+  // bestCp   = sfBefore       (ce que le joueur pouvait obtenir au mieux)
+  // playedCp = -sfAfter       (ce qu'il a obtenu, vu de son côté = inverse de l'adversaire)
+  // diff     = bestCp - playedCp = sfBefore - (-sfAfter) = sfBefore + sfAfter
+  // Si bon coup : sfBefore≈+50, sfAfter≈-50 → diff=0 ✓
+  // Si gaffe    : sfBefore≈+50, sfAfter≈+200 → diff=250cp ✓
+  var bestCp1   = sfBefore1;
+  var playedCp1 = -sfAfter1;
   var diff1 = Math.max(0, bestCp1 - playedCp1);
   var ann1=classifyByCpDiff(diff1, move, moveNum, sfAfter1, isTheory);
   var acc1=winToAccuracy(cpToWin(bestCp1), cpToWin(playedCp1));
@@ -1658,8 +1700,8 @@ async function requestAI(move, ann, evalBefore, evalAfter){
   var sfAfter2=await sfEval(fenAfter, 600);
   if(myId!==analRequestId){ return; }
   if(sfBefore2===null||sfAfter2===null){ aiRunning=false; return; }
-  var bestCp2   = isW ?  sfBefore2 : -sfBefore2;
-  var playedCp2 = isW ?  sfAfter2  : -sfAfter2;
+  var bestCp2   = sfBefore2;
+  var playedCp2 = -sfAfter2;
   var diff2=Math.max(0, bestCp2 - playedCp2);
   var ann2=classifyByCpDiff(diff2, move, moveNum, sfAfter2, isTheory);
   var acc2=winToAccuracy(cpToWin(bestCp2), cpToWin(playedCp2));
@@ -1938,7 +1980,7 @@ function startGame(mode){
     openEditor();
     return;
   }
-    gameMode=mode;chess=new Chess();
+  gameMode=mode;chess=new Chess();
   selSq=null;legalMoves=[];lastMove=null;aiRunning=false;evalHistory=[];aiThinking=false;
   document.querySelectorAll('.sq-ann').forEach(e=>e.remove());
   cheatClear();
@@ -1996,12 +2038,12 @@ function resetGame(){
 
 
 // ══════════════════════════════════════════════════════════
-// MODE ÉDITEUR DE POSITION
+// MODE ÉDITEUR DE POSITION — version corrigée
 // ══════════════════════════════════════════════════════════
 var editorActive=false;
-var edSelectedPiece=null; // ex: 'wK', 'bP', null=effacer
+var edSelectedPiece=null;
 var edTurn='w';
-var edBoard=null; // Chess() en mode éditeur
+var edBoard=null;
 
 var ED_PIECES=[
   {code:'wK',sym:'♔'},{code:'wQ',sym:'♕'},{code:'wR',sym:'♖'},
@@ -2015,28 +2057,23 @@ function edInit(){
   if(!pal||pal.children.length>0) return;
   ED_PIECES.forEach(function(p){
     var btn=document.createElement('div');
-    btn.className='ed-piece';
-    btn.title=p.code;
-    btn.textContent=p.sym;
+    btn.className='ed-piece'; btn.title=p.code; btn.textContent=p.sym;
     btn.style.color=p.code[0]==='w'?'#f0d9b5':'#1a1a1a';
     if(p.code[0]==='w') btn.style.textShadow='0 1px 3px rgba(0,0,0,0.5)';
     btn.onclick=function(){ edSelectPiece(p.code); };
     pal.appendChild(btn);
   });
-  // Bouton effacer
   var era=document.createElement('div');
-  era.className='ed-piece eraser'; era.title='Effacer';
-  era.textContent='✕'; era.style.color='#e05555';
+  era.className='ed-piece eraser'; era.title='eraser';
+  era.innerHTML='<span style="font-size:0.9rem;color:#e05555">✕</span>';
   era.onclick=function(){ edSelectPiece(null); };
   pal.appendChild(era);
 }
 
 function edSelectPiece(code){
   edSelectedPiece=code;
-  document.querySelectorAll('.ed-piece').forEach(function(b){
-    b.classList.toggle('selected',
-      code===null ? b.classList.contains('eraser') : b.title===code
-    );
+  document.querySelectorAll('#ed-pieces-palette .ed-piece').forEach(function(b){
+    b.classList.toggle('selected', code===null ? b.classList.contains('eraser') : b.title===code);
   });
 }
 
@@ -2047,50 +2084,51 @@ function edSetTurn(color){
   edUpdateFenInput();
 }
 
-function edBuildFen(){
-  if(!edBoard) return 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
-  var b=edBoard.board();
-  var rows=[];
+function edGetFen(){
+  if(!edBoard) return 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR '+edTurn+' KQkq - 0 1';
+  var b=edBoard.board(); var rows=[];
   for(var r=0;r<8;r++){
     var row=''; var empty=0;
     for(var f=0;f<8;f++){
       var p=b[r][f];
       if(!p){ empty++; }
-      else{
-        if(empty>0){row+=empty;empty=0;}
-        var c=p.type; if(p.color==='w') c=c.toUpperCase();
-        row+=c;
-      }
+      else{ if(empty>0){row+=empty;empty=0;} var c=p.type; if(p.color==='w')c=c.toUpperCase(); row+=c; }
     }
-    if(empty>0) row+=empty;
-    rows.push(row);
+    if(empty>0) row+=empty; rows.push(row);
   }
-  return rows.join('/')+' '+edTurn+' KQkq - 0 1';
+  return rows.join('/')+' '+edTurn+' - - 0 1';
 }
 
 function edUpdateFenInput(){
   var inp=document.getElementById('editor-fen-input');
-  if(inp) inp.value=edBuildFen();
+  if(inp) inp.value=edGetFen();
 }
 
-function edPlacePiece(sq){
-  if(!edBoard) return;
-  if(edSelectedPiece===null){
-    edBoard.remove(sq);
-  } else {
-    edBoard.remove(sq);
-    var color=edSelectedPiece[0];
-    var type=edSelectedPiece[1].toLowerCase();
+// Handler global pour les clics sur l'échiquier en mode éditeur
+function edHandleBoardClick(e){
+  if(!editorActive) return;
+  e.stopPropagation();
+  var el=e.currentTarget;
+  var sq=el.dataset.sq;
+  if(!sq||!edBoard) return;
+  edBoard.remove(sq);
+  if(edSelectedPiece!==null){
+    var color=edSelectedPiece[0]; var type=edSelectedPiece[1].toLowerCase();
     edBoard.put({type:type,color:color},sq);
   }
-  edUpdateFenInput();
-  edRenderBoard();
+  edUpdateFenInput(); edRenderBoard();
+}
+function edHandleBoardRightClick(e){
+  if(!editorActive) return;
+  e.preventDefault(); e.stopPropagation();
+  var sq=e.currentTarget.dataset.sq;
+  if(!sq||!edBoard) return;
+  edBoard.remove(sq); edUpdateFenInput(); edRenderBoard();
 }
 
 function edRenderBoard(){
-  // Réutilise le render du jeu mais en mode éditeur
   document.querySelectorAll('.sq').forEach(function(el){
-    var pw=el.querySelector('.piece-wrap');if(pw)el.removeChild(pw);
+    var pw=el.querySelector('.piece-wrap'); if(pw)el.removeChild(pw);
     el.classList.remove('hl','selected','can-move','can-capture');
   });
   if(!edBoard) return;
@@ -2108,68 +2146,63 @@ function edRenderBoard(){
 function openEditor(){
   editorActive=true;
   edInit();
-  // Charge la position initiale
   edBoard=new Chess();
   edTurn='w';
   document.getElementById('ed-turn-w').classList.add('active');
   document.getElementById('ed-turn-b').classList.remove('active');
+  edSelectPiece('wP'); // sélection initiale par défaut
   edUpdateFenInput();
-  // Montre l'échiquier vide avec bouton éditeur
-  buildBoard();
-  edRenderBoard();
-  // Rend les cases cliquables en mode éditeur
+  // Montrer l'échiquier
+  buildBoard(); edRenderBoard();
+  // Attacher les listeners APRÈS buildBoard
   document.querySelectorAll('.sq').forEach(function(el){
-    el.addEventListener('click', edSquareClick);
-    el.addEventListener('contextmenu', edSquareRightClick);
+    el.addEventListener('click', edHandleBoardClick, true); // capture phase
+    el.addEventListener('contextmenu', edHandleBoardRightClick, true);
   });
   document.getElementById('editor-overlay').classList.add('show');
 }
 
-function edSquareClick(e){
-  if(!editorActive) return;
-  var sq=this.dataset.sq||e.currentTarget.dataset.sq;
-  edPlacePiece(sq);
-}
-function edSquareRightClick(e){
-  e.preventDefault();
-  if(!editorActive) return;
-  var sq=this.dataset.sq||e.currentTarget.dataset.sq;
-  if(edBoard) edBoard.remove(sq);
-  edUpdateFenInput(); edRenderBoard();
+function edCloseEditor(){
+  editorActive=false;
+  document.getElementById('editor-overlay').classList.remove('show');
+  document.querySelectorAll('.sq').forEach(function(el){
+    el.removeEventListener('click', edHandleBoardClick, true);
+    el.removeEventListener('contextmenu', edHandleBoardRightClick, true);
+  });
 }
 
 function edLoadFen(fen){
-  if(!fen||fen.length<10) return;
+  fen=fen.trim();
+  if(!fen||fen.length<15) return;
   try{
     var tmp=new Chess(fen);
     edBoard=tmp;
-    // Extraire le trait depuis le FEN
     var parts=fen.split(' ');
-    if(parts[1]==='b'){edTurn='b';document.getElementById('ed-turn-b').classList.add('active');document.getElementById('ed-turn-w').classList.remove('active');}
-    else{edTurn='w';document.getElementById('ed-turn-w').classList.add('active');document.getElementById('ed-turn-b').classList.remove('active');}
+    var turn=parts[1]==='b'?'b':'w';
+    edTurn=turn;
+    document.getElementById('ed-turn-w').classList.toggle('active',turn==='w');
+    document.getElementById('ed-turn-b').classList.toggle('active',turn==='b');
     edRenderBoard();
-  }catch(e){}
+  }catch(e){ console.log('FEN invalide',e); }
 }
 
 function edStartFromPosition(){
   if(!edBoard) return;
-  var fen=edBuildFen();
-  document.getElementById('editor-overlay').classList.remove('show');
-  editorActive=false;
-  // Nettoie les listeners éditeur
-  document.querySelectorAll('.sq').forEach(function(el){
-    el.removeEventListener('click',edSquareClick);
-    el.removeEventListener('contextmenu',edSquareRightClick);
-  });
-  // Lance le jeu depuis cette position
-  chess=new Chess(fen);
-  gameMode='editor';
-  selSq=null;legalMoves=[];lastMove=null;aiRunning=false;evalHistory=[];
+  var fen=edGetFen();
+  edCloseEditor();
+  // Vérifier que la position est valide (au moins les deux rois)
+  var testChess=null;
+  try{ testChess=new Chess(fen); }catch(e){ alert('Position invalide !'); return; }
+  if(!testChess) return;
+  // Lancer le jeu
+  gameMode='editor'; chess=testChess;
+  selSq=null;legalMoves=[];lastMove=null;aiRunning=false;evalHistory=[];aiThinking=false;
+  cancelAnalysis();
   document.querySelectorAll('.sq-ann').forEach(function(e){e.remove();});
   cheatClear();
-  var cm=document.getElementById('chat-messages');if(cm)cm.innerHTML='';
+  var cm=document.getElementById('chat-messages'); if(cm)cm.innerHTML='';
   document.getElementById('analysis-card').className='analysis-card';
-  document.getElementById('analysis-body').innerHTML='Faites votre premier coup pour recevoir l\'analyse IA…';
+  document.getElementById('analysis-body').innerHTML='Faites votre premier coup…';
   document.getElementById('eval-num').textContent='0.0';
   document.getElementById('eval-bar').style.width='50%';
   document.getElementById('move-history').innerHTML='';
@@ -2181,47 +2214,66 @@ function edStartFromPosition(){
   document.getElementById('theory-next-wrap').style.display='none';
   document.getElementById('summary-overlay').classList.remove('show');
   document.getElementById('promo-overlay').classList.remove('show');
-  stopClock();initClocks();
+  stopClock(); initClocks();
   var badge=document.getElementById('mode-badge');
-  badge.className='topbar-badge badge-ai-t';badge.textContent='✏️ Éditeur';
+  badge.className='topbar-badge badge-ai-t'; badge.textContent='✏️ Éditeur';
   document.getElementById('online-info-card').style.display='none';
   document.getElementById('difficulty-panel').style.display='none';
   document.getElementById('time-presets-panel').style.display='block';
   document.getElementById('name-white').textContent='Blancs';
   document.getElementById('name-black').textContent='Noirs';
-  var cp=document.getElementById('cheat-panel');if(cp)cp.classList.add('visible');
-  boardFlipped=false;buildBoard();render();updateAll();
-  var cml=document.getElementById('chat-mode-label');if(cml)cml.textContent='Éditeur';
-  var chatDot=document.getElementById('chat-dot');if(chatDot)chatDot.style.background='var(--blue)';
-  addChatMsg('Position chargée depuis l\'éditeur. Bonne chance !','system');
+  var cp=document.getElementById('cheat-panel'); if(cp)cp.classList.add('visible');
+  boardFlipped=false; buildBoard(); render(); updateAll();
+  var cml=document.getElementById('chat-mode-label'); if(cml)cml.textContent='Éditeur';
+  var chatDot=document.getElementById('chat-dot'); if(chatDot)chatDot.style.background='var(--blue)';
+  addChatMsg('Position personnalisée chargée. Bonne chance !','system');
   showScreen('game-screen');
 }
 
 function edCopyFen(){
-  var fen=edBuildFen();
+  var fen=edGetFen();
   navigator.clipboard.writeText(fen).then(function(){
     var btn=event.target; var orig=btn.textContent;
     btn.textContent='✓ Copié !'; setTimeout(function(){btn.textContent=orig;},2000);
   });
 }
-
 function edSetStartPos(){
-  edBoard=new Chess();
-  edTurn='w';
+  edBoard=new Chess(); edTurn='w';
   document.getElementById('ed-turn-w').classList.add('active');
   document.getElementById('ed-turn-b').classList.remove('active');
   edUpdateFenInput(); edRenderBoard();
 }
-
 function edClearBoard(){
-  edBoard=new Chess('8/8/8/8/8/8/8/8 w - - 0 1');
+  try{ edBoard=new Chess('8/8/8/8/8/8/8/8 w - - 0 1'); }catch(e){ edBoard=new Chess(); }
   edUpdateFenInput(); edRenderBoard();
+}
+// ══════════════════════════════════════════════════════════
+// THÈME SOMBRE / CLAIR
+// ══════════════════════════════════════════════════════════
+var currentTheme='dark';
+function toggleTheme(){
+  currentTheme=currentTheme==='dark'?'light':'dark';
+  applyTheme(currentTheme);
+  try{ localStorage.setItem('cm_theme',currentTheme); }catch(e){}
+}
+function applyTheme(theme){
+  currentTheme=theme;
+  document.body.classList.toggle('theme-light',theme==='light');
+  var btn=document.getElementById('theme-toggle-btn');
+  if(btn) btn.textContent=theme==='light'?'🌙':'☀️';
+}
+function loadTheme(){
+  try{
+    var saved=localStorage.getItem('cm_theme');
+    if(saved) applyTheme(saved);
+  }catch(e){}
 }
 
 // ══════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════
 window.onload=function(){
+  loadTheme();
   checkAdminSession();
   var mode=sessionStorage.getItem('chessStartMode');
   if(mode){sessionStorage.removeItem('chessStartMode');startGame(mode);}
