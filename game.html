@@ -2232,43 +2232,139 @@ function edRenderBoard(){
 // Handlers clics échiquier en mode éditeur
 function edHandleBoardClick(e){
   if(!editorActive) return;
-  e.stopPropagation();
+  e.preventDefault();
+  e.stopImmediatePropagation();
   var sq=e.currentTarget.dataset.sq;
   if(!sq||!edBoard) return;
-  edBoard.remove(sq);
-  if(edSelectedPiece!==null){
-    edBoard.put({type:edSelectedPiece[1].toLowerCase(), color:edSelectedPiece[0]}, sq);
-  }
-  edUpdateFenInput(); edRenderBoard();
+  edPlaceOrRemove(sq, edSelectedPiece);
 }
 function edHandleBoardRightClick(e){
-  e.preventDefault(); e.stopPropagation();
+  e.preventDefault();
+  e.stopImmediatePropagation();
   if(!editorActive) return;
   var sq=e.currentTarget.dataset.sq;
   if(!sq||!edBoard) return;
-  edBoard.remove(sq); edUpdateFenInput(); edRenderBoard();
+  edPlaceOrRemove(sq, null); // null = effacer
+}
+
+// Place ou efface une pièce sur une case
+// code = ex: "wP", "bK", null = effacer
+function edPlaceOrRemove(sq, code){
+  if(!edBoard||!sq) return;
+  // Reconstruire le board manuellement car chess.js .put()/.remove()
+  // ne fonctionne pas sur toutes les positions non-standards
+  var b=edBoard.board();
+  // Convertir sq en indices
+  var file=sq.charCodeAt(0)-97; // a=0..h=7
+  var rank=8-parseInt(sq[1]);   // 8→0, 7→1...
+  // Créer une nouvelle position FEN à partir du board actuel
+  var rows=[];
+  for(var r=0;r<8;r++){
+    var row=''; var empty=0;
+    for(var f=0;f<8;f++){
+      var p=(r===rank&&f===file)?null:b[r][f]; // effacer la case cible
+      if(!p){ empty++; }
+      else{ if(empty>0){row+=empty;empty=0;} var c=p.type; if(p.color==='w')c=c.toUpperCase(); row+=c; }
+    }
+    if(empty>0) row+=empty;
+    rows.push(row);
+  }
+  // Placer la nouvelle pièce si code fourni
+  if(code){
+    var rowArr=rows[rank].split(''); // reconstruct chars
+    // Remplacer dans la rangée
+    var newRows=[];
+    for(var r2=0;r2<8;r2++){
+      if(r2!==rank){newRows.push(rows[r2]);continue;}
+      // Décoder la rangée, remplacer la case
+      var cells=[]; var ri=0;
+      for(var ci=0;ci<rows[r2].length;ci++){
+        var ch=rows[r2][ci];
+        if(ch>="1"&&ch<="8"){ for(var k=0;k<parseInt(ch);k++) cells.push(null); }
+        else cells.push(ch);
+      }
+      cells[file]=(code[0]==='w')?code[1].toUpperCase():code[1].toLowerCase();
+      // Réencoder
+      var newRow=''; var em=0;
+      for(var ci2=0;ci2<8;ci2++){
+        if(!cells[ci2]){em++;}
+        else{if(em>0){newRow+=em;em=0;}newRow+=cells[ci2];}
+      }
+      if(em>0) newRow+=em;
+      newRows.push(newRow);
+    }
+    rows=newRows;
+  }
+  var fen=rows.join('/')+' '+edTurn+' - - 0 1';
+  try{
+    var tmp=new Chess(fen);
+    edBoard=tmp;
+  }catch(e2){
+    // FEN invalide (ex: deux rois mêmes couleur) — ignorer
+    return;
+  }
+  edUpdateFenInput();
+  edRenderBoard();
 }
 
 function openEditor(){
   editorActive=true;
-  edBoard=new Chess();
+  edBoard=new Chess(); // position de départ par défaut
   edTurn='w';
-  // Montrer le panel
+  // Réinitialiser l'interface de jeu pour l'éditeur
+  selSq=null; legalMoves=[]; lastMove=null; aiRunning=false; evalHistory=[]; aiThinking=false;
+  cancelAnalysis();
+  document.querySelectorAll('.sq-ann').forEach(function(e){e.remove();});
+  cheatClear();
+  var cm=document.getElementById('chat-messages'); if(cm) cm.innerHTML='';
+  document.getElementById('analysis-card').className='analysis-card';
+  document.getElementById('analysis-body').innerHTML='Placez vos pièces puis cliquez ▶ Jouer';
+  document.getElementById('eval-num').textContent='0.0';
+  document.getElementById('eval-bar').style.width='50%';
+  document.getElementById('move-history').innerHTML='';
+  document.getElementById('cap-white').textContent='—';
+  document.getElementById('cap-black').textContent='—';
+  document.getElementById('adv-white').textContent='';
+  document.getElementById('adv-black').textContent='';
+  document.getElementById('gameover-overlay').classList.remove('show');
+  document.getElementById('opening-bar').classList.add('hidden');
+  document.getElementById('depth-row').style.display='none';
+  document.getElementById('theory-next-wrap').style.display='none';
+  document.getElementById('summary-overlay').classList.remove('show');
+  document.getElementById('promo-overlay').classList.remove('show');
+  stopClock(); initClocks();
+  // Badge
+  var badge=document.getElementById('mode-badge');
+  badge.className='topbar-badge badge-ai-t'; badge.textContent='✏️ Éditeur';
+  // Panels
+  document.getElementById('online-info-card').style.display='none';
+  document.getElementById('difficulty-panel').style.display='none';
+  document.getElementById('time-presets-panel').style.display='none';
+  document.getElementById('name-white').textContent='Blancs';
+  document.getElementById('name-black').textContent='Noirs';
+  var cp=document.getElementById('cheat-panel'); if(cp) cp.classList.add('visible');
+  // Montrer le panel éditeur dans la colonne droite
   var panel=document.getElementById('editor-panel');
   if(panel) panel.classList.add('active');
-  // Curseur spécial
+  // Curseur spécial sur l'échiquier
   document.body.classList.add('ed-mode');
-  // Init palette SVG
+  // Init palette + sélection par défaut
   edInitPalette();
   edSelectPiece('wP');
   edUpdateFenInput();
-  // Board
-  buildBoard(); edRenderBoard();
-  // Attacher listeners (phase capture pour priorité)
+  // Construire l'échiquier
+  boardFlipped=false; buildBoard(); edRenderBoard();
+  // Chat
+  var cml=document.getElementById('chat-mode-label'); if(cml) cml.textContent='Éditeur';
+  var chatDot=document.getElementById('chat-dot'); if(chatDot) chatDot.style.background='var(--blue)';
+  addChatMsg('Mode éditeur — placez vos pièces puis cliquez ▶ Jouer.','system');
+  // Attacher les handlers APRÈS buildBoard (les .sq existent maintenant)
   document.querySelectorAll('.sq').forEach(function(el){
     el.addEventListener('click', edHandleBoardClick, true);
     el.addEventListener('contextmenu', edHandleBoardRightClick, true);
   });
+  // Aller sur le game screen
+  showScreen('game-screen');
 }
 
 function edCloseEditor(){
