@@ -467,6 +467,93 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* Curseur spécial sur l'échiquier en mode éditeur */
 body.ed-mode #chess-board{cursor:crosshair}
 body.ed-mode .sq:hover{outline:2px solid rgba(129,182,76,0.5);outline-offset:-2px}
+
+/* ── NAVIGATION HISTORIQUE ── */
+.nav-btns{display:flex;gap:4px;justify-content:center;margin-top:6px}
+.nav-btn{background:var(--bg3);border:1px solid var(--border);color:var(--dim);
+  width:30px;height:30px;border-radius:6px;font-size:0.85rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;padding:0}
+.nav-btn:hover:not([disabled]){border-color:var(--green);color:var(--green)}
+.nav-btn[disabled]{opacity:0.3;cursor:default;pointer-events:none}
+.move-san.nav-hl{background:rgba(129,182,76,0.22);border-radius:4px;outline:1px solid rgba(129,182,76,0.4)}
+
+/* ── PRÉCISION LIVE ── */
+.live-acc-wrap{display:flex;gap:6px;margin-top:6px}
+.acc-pill{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:6px 4px;text-align:center}
+.acc-pill .av{font-size:1rem;font-weight:700;font-family:'DM Serif Display',serif}
+.acc-pill .al{font-size:0.58rem;color:var(--dimmer);text-transform:uppercase;letter-spacing:0.06em;margin-top:1px}
+.c-green{color:var(--green)}.c-gold{color:var(--gold)}.c-red{color:var(--red2)}
+
+/* ── STATISTIQUES SESSION ── */
+.sess-row{display:flex;gap:6px;margin-top:6px}
+.sess-pill{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:6px 4px;text-align:center}
+.sess-pill .sv{font-size:1rem;font-weight:700;font-family:'DM Serif Display',serif;color:var(--text)}
+.sess-pill .sl{font-size:0.58rem;color:var(--dimmer);text-transform:uppercase;letter-spacing:0.06em;margin-top:1px}
+
+/* ── MODE BLINDFOLD ── */
+body.blindfold .piece-wrap svg{visibility:hidden}
+body.blindfold .sq.selected .piece-wrap svg,
+body.blindfold .sq.hl .piece-wrap svg{visibility:visible}
+.blindfold-badge{display:none;font-size:0.65rem;font-weight:700;letter-spacing:0.08em;
+  padding:3px 9px;border-radius:20px;text-transform:uppercase;
+  background:rgba(163,113,247,0.15);color:#a371f7;border:1px solid rgba(163,113,247,0.3);margin-left:6px}
+body.blindfold .blindfold-badge{display:inline-block}
+
+/* ── TABLEAU DE BORD COUPS (temps + bouton replay) ── */
+.move-row{cursor:default}
+.move-san{cursor:pointer;padding:2px 4px;border-radius:4px;transition:background 0.12s;
+  display:inline-flex;align-items:center;gap:3px}
+.move-san:hover{background:rgba(255,255,255,0.06)}
+.move-t{font-size:0.55rem;color:var(--dimmer);font-style:italic;vertical-align:super}
+.replay-btn{display:none;font-size:0.6rem;background:var(--bg4);border:1px solid var(--border);
+  color:var(--dim);border-radius:3px;padding:0 4px;cursor:pointer;line-height:1.6;
+  font-family:'DM Sans',sans-serif;transition:all 0.12s;white-space:nowrap}
+.replay-btn:hover{border-color:var(--green);color:var(--green)}
+.move-row:hover .replay-btn{display:inline}
+
+/* ── INDICATEUR DE MENACES ── */
+.threat-bar{display:none;background:rgba(200,64,64,0.08);border:1px solid rgba(200,64,64,0.2);
+  border-radius:8px;padding:7px 10px;font-size:0.78rem;color:var(--red2)}
+.threat-bar.show{display:block}
+.threat-bar strong{font-weight:700}
+
+/* ── BARRE DE PROFONDEUR ── */
+.depth-live{font-size:0.62rem;color:var(--dimmer);margin-top:3px;display:none}
+.depth-live.show{display:block}
+
+/* ── MODE MINI (plateau rétréci) ── */
+body.mini-mode #chess-board{grid-template-columns:repeat(8,50px)!important;grid-template-rows:repeat(8,50px)!important}
+body.mini-mode .sq{width:50px!important;height:50px!important}
+body.mini-mode .piece-wrap svg{width:46px!important;height:46px!important}
+body.mini-mode .player-bar,body.mini-mode #status-msg{width:412px!important}
+
+/* ── COPIER IMAGE FLASH ── */
+@keyframes imgflash{0%{opacity:0.5}100%{opacity:0}}
+.copy-flash{position:fixed;inset:0;background:#fff;pointer-events:none;
+  z-index:9999;opacity:0;animation:none}
+.copy-flash.go{animation:imgflash 0.3s ease-out forwards}
+
+/* ── COMPTEUR DE COUPS LIVE ── */
+.move-counter{font-size:0.68rem;color:var(--dimmer);margin-left:auto;padding:2px 7px;
+  background:var(--bg3);border-radius:10px;border:1px solid var(--border)}
+
+/* ── HIGHLIGHT DERNIÈRE ANALYSE ── */
+@keyframes analysisIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.analysis-card.has-result{animation:analysisIn 0.3s ease}
+
+/* ── AUTO-FLIP TOGGLE ── */
+.autoflip-btn{font-size:0.7rem;background:var(--bg3);border:1px solid var(--border);
+  color:var(--dim);padding:4px 9px;border-radius:6px;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all 0.15s;white-space:nowrap}
+.autoflip-btn.on{background:rgba(129,182,76,0.12);border-color:rgba(129,182,76,0.35);color:var(--green)}
+
+/* ── THÈME CLAIR bonus ── */
+body.theme-light .threat-bar{background:rgba(200,64,64,0.05)}
+body.theme-light .move-san:hover{background:rgba(0,0,0,0.05)}
+body.theme-light .nav-btn{background:#e8e5de;border-color:#d0cdc6}
+body.theme-light .acc-pill,.sess-pill{background:#f0ede8}
 </style>
 </head>
 <body>
@@ -548,7 +635,12 @@ body.ed-mode .sq:hover{outline:2px solid rgba(129,182,76,0.5);outline-offset:-2p
     <button class="topbar-btn" onclick="resetGame()">↺ Reset</button>
     <button class="topbar-btn" onclick="showScreen('home-screen')">⌂ Menu</button>
     <div id="engine-badge" style="font-size:0.68rem;font-weight:700;letter-spacing:0.06em;padding:5px 11px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);color:var(--dimmer);white-space:nowrap;">⏳ Moteur…</div>
-    <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Changer de thème">🌙</button>
+    <button class="topbar-btn" id="blindfold-btn" onclick="toggleBlindFold()" title="Mode Blindfold">👁</button>
+    <span class="blindfold-badge" id="blindfold-badge">BLIND</span>
+    <button class="topbar-btn" onclick="toggleMiniMode()" id="mini-btn" title="Réduire plateau">⊡</button>
+    <button class="topbar-btn" onclick="copyBoardSVG()" title="Copier plateau en image">📷</button>
+    <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Thème">🌙</button>
+    <div class="copy-flash" id="copy-flash"></div>
   </div>
   <div class="game-layout">
     <!-- LEFT -->
@@ -578,8 +670,35 @@ body.ed-mode .sq:hover{outline:2px solid rgba(129,182,76,0.5);outline-offset:-2p
         </div>
       </div>
       <div class="panel-section" style="flex:1">
-        <div class="section-label">Historique des coups</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:7px;border-bottom:1px solid var(--border);margin-bottom:6px">
+          <div class="section-label" style="border:none;padding:0;margin:0">Historique</div>
+          <span class="move-counter" id="move-counter">0 coups</span>
+        </div>
         <div id="move-history"></div>
+        <div class="nav-btns">
+          <button class="nav-btn" id="nav-s" onclick="navGo(0)"       title="Début ↑">⏮</button>
+          <button class="nav-btn" id="nav-p" onclick="navPrev()"      title="Précédent ←">◀</button>
+          <button class="nav-btn" id="nav-n" onclick="navNext()"      title="Suivant →">▶</button>
+          <button class="nav-btn" id="nav-e" onclick="navGoEnd()"     title="Fin ↓">⏭</button>
+        </div>
+      </div>
+      <div class="panel-section" id="acc-section" style="display:none">
+        <div class="section-label">Précision en direct</div>
+        <div class="live-acc-wrap">
+          <div class="acc-pill"><div class="av c-green" id="acc-w">—</div><div class="al">⬜ Blancs</div></div>
+          <div class="acc-pill"><div class="av c-green" id="acc-b">—</div><div class="al">⬛ Noirs</div></div>
+        </div>
+      </div>
+      <div class="panel-section">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:7px;border-bottom:1px solid var(--border);margin-bottom:6px">
+          <div class="section-label" style="border:none;padding:0;margin:0">Session</div>
+          <button class="autoflip-btn" id="autoflip-btn" onclick="toggleAutoFlip()" title="Retourner l'échiquier automatiquement">⇄ Auto-flip</button>
+        </div>
+        <div class="sess-row">
+          <div class="sess-pill"><div class="sv" id="sess-p">0</div><div class="sl">Parties</div></div>
+          <div class="sess-pill"><div class="sv c-green" id="sess-w">0</div><div class="sl">Victoires</div></div>
+          <div class="sess-pill"><div class="sv c-gold" id="sess-d">0</div><div class="sl">Nulles</div></div>
+        </div>
       </div>
       <div class="panel-section">
         <div class="section-label">Pièces capturées</div>
@@ -694,6 +813,7 @@ body.ed-mode .sq:hover{outline:2px solid rgba(129,182,76,0.5);outline-offset:-2p
           <button class="ed-act danger" onclick="edClearBoard()">✕ Vider</button>
         </div>
       </div>
+      <div class="threat-bar" id="threat-bar"></div>
       <div class="section-label" style="padding-top:4px">Analyse IA en direct</div>
       <div class="analysis-card" id="analysis-card">
         <div class="analysis-body" id="analysis-body">Faites votre premier coup pour recevoir l\'analyse IA…</div>
@@ -733,7 +853,10 @@ body.ed-mode .sq:hover{outline:2px solid rgba(129,182,76,0.5);outline-offset:-2p
         <div class="export-btns">
           <button class="exp-btn" onclick="exportPGN()">📋 Copier PGN</button>
           <button class="exp-btn" onclick="exportFEN()">📄 Copier FEN</button>
+          <button class="exp-btn" onclick="downloadPGN()">⬇ PGN fichier</button>
+          <button class="exp-btn" onclick="importPGN()">⬆ Importer PGN</button>
         </div>
+        <input type="file" id="pgn-file-input" accept=".pgn,.txt" style="display:none" onchange="handlePGNFile(event)">
       </div>
       <div class="chat-panel" id="chat-panel">
         <div class="chat-header">
@@ -784,6 +907,10 @@ body.ed-mode .sq:hover{outline:2px solid rgba(129,182,76,0.5);outline-offset:-2p
       <div class="stat-card"><div class="val" id="sum-accuracy-b">—</div><div class="lbl">Précision Noirs</div></div>
       <div class="stat-card"><div class="val bad" id="sum-blunders">0</div><div class="lbl">Gaffes (??)</div></div>
       <div class="stat-card"><div class="val good" id="sum-brilliant">0</div><div class="lbl">Excellents (!!) </div></div>
+      <div class="stat-card"><div class="val" id="sum-moves">0</div><div class="lbl">Coups joués</div></div>
+      <div class="stat-card"><div class="val" id="sum-avgtime">—</div><div class="lbl">Temps / coup</div></div>
+      <div class="stat-card"><div class="val" id="sum-mistakes">0</div><div class="lbl">Erreurs (?)</div></div>
+      <div class="stat-card"><div class="val" id="sum-inaccurate">0</div><div class="lbl">Imprécis (?!)</div></div>
     </div>
     <div class="missed-move" id="sum-missed-wrap" style="display:none">
       <div class="title">⚠ Meilleur coup manqué</div>
@@ -1265,6 +1392,8 @@ async function playAIMove(){
     else sndMove();
 
     render();showAnnotationOnSquare(move.to,ann);updateAll();
+    stopMoveTimer();navReset();
+    updateThreatBar();checkAutoFlip();startMoveTimer();
     requestAI(move,ann,evalBefore,evalAfter);
     aiThinking=false;startClock();
   }catch(e){
@@ -1763,6 +1892,7 @@ async function requestAI(move, ann, evalBefore, evalAfter){
   var ann1=classifyByCpDiff(diff1, move, moveNum, sfAfter1, isTheory);
   var acc1=winToAccuracy(cpToWin(bestCp1), cpToWin(playedCp1));
   renderAnalysis(card, body, move, ann1, sfAfter1, diff1, acc1, false);
+  pushAccuracy(move.color, acc1);
   if(myId!==analRequestId){ return; }
 
   // PASSE 2 profonde
@@ -1780,6 +1910,7 @@ async function requestAI(move, ann, evalBefore, evalAfter){
   var acc2=winToAccuracy(cpToWin(bestCp2), cpToWin(playedCp2));
   if(Math.abs(diff2-diff1)>=50||ann2!==ann1){
     renderAnalysis(card, body, move, ann2, sfAfter2, diff2, acc2, true);
+    pushAccuracy(move.color, acc2);
     if(ann2!==ann1) showAnnotationOnSquare(move.to, ann2);
   }
   aiRunning=false;
@@ -1849,8 +1980,9 @@ async function onSqClick(sq){
       else if(move.captured)sndCapture();
       else if(theory)sndTheory();
       else sndMove();
-      render();showAnnotationOnSquare(move.to,ann);updateAll();
-      requestAI(move,ann,evalBefore,evalAfter);startClock();
+      stopMoveTimer();navReset();
+      render();showAnnotationOnSquare(move.to,ann);updateAll();updateThreatBar();
+      requestAI(move,ann,evalBefore,evalAfter);startClock();checkAutoFlip();startMoveTimer();
       if(gameMode==='online'&&peer&&conn&&conn.open)conn.send({type:'move',from:move.from,to:move.to,promotion:promo});
       if(gameMode==='ai'&&!chess.game_over())setTimeout(playAIMove,300);
       return;
@@ -1892,31 +2024,14 @@ function updateStatus(){
   else if(chess.in_check()){el.textContent='⚠ '+(chess.turn()==='w'?'Blancs':'Noirs')+' — ÉCHEC !';el.className='check';}
   else{el.textContent='Tour des '+(chess.turn()==='w'?'Blancs':'Noirs');}
 }
-function checkEnd(){
-  if(!chess.game_over()){document.getElementById('gameover-overlay').classList.remove('show');return;}
-  stopClock();
-  if(chess.in_checkmate()){const winner=chess.turn()==='w'?'Noirs':'Blancs';showGameOver(chess.turn()==='b'?'♙':'♟',`Victoire des ${winner}`,'Échec et mat');}
-  else{showGameOver('½','Partie Nulle',chess.in_stalemate()?'Pat':'Nulle');}
-}
+// checkEnd défini plus bas
 function updateEval(){
   const s=evalPosition();const c=s/100;
   document.getElementById('eval-num').textContent=(c>=0?'+':'')+c.toFixed(1);
   const pct=50+(Math.max(-1500,Math.min(1500,s))/1500)*47;
   document.getElementById('eval-bar').style.width=pct+'%';
 }
-function updateHistory(){
-  const h=chess.history({verbose:true});const el=document.getElementById('move-history');el.innerHTML='';
-  for(let i=0;i<h.length;i+=2){
-    const row=document.createElement('div');row.className='move-row';
-    const num=document.createElement('span');num.className='move-num';num.textContent=(i/2+1)+'.';
-    const wAnn=evalHistory[i];const w=document.createElement('span');w.className='move-san';
-    w.innerHTML=h[i].san+(wAnn&&wAnn.ann&&wAnn.ann.sym?`<span class="ann-chip" style="background:${wAnn.ann.bg};color:${wAnn.ann.fg}">${wAnn.ann.sym}</span>`:'');
-    const bAnn=evalHistory[i+1];const b=document.createElement('span');b.className='move-san';
-    if(h[i+1])b.innerHTML=h[i+1].san+(bAnn&&bAnn.ann&&bAnn.ann.sym?`<span class="ann-chip" style="background:${bAnn.ann.bg};color:${bAnn.ann.fg}">${bAnn.ann.sym}</span>`:'');
-    row.append(num,w,b);el.appendChild(row);
-  }
-  el.scrollTop=el.scrollHeight;
-}
+// updateHistory défini plus bas
 function updateCaptured(){
   const h=chess.history({verbose:true});const wCap=[],bCap=[];let wMat=0,bMat=0;
   h.forEach(m=>{if(!m.captured)return;const k=m.color==='w'?'b'+m.captured.toUpperCase():'w'+m.captured.toUpperCase();const v=PIECE_VAL[m.captured]||0;if(m.color==='w'){wCap.push(SYM[k]);wMat+=v;}else{bCap.push(SYM[k]);bMat+=v;}});
@@ -1930,35 +2045,7 @@ function updateCaptured(){
 // ══════════════════════════════════════════════════════════
 // SUMMARY
 // ══════════════════════════════════════════════════════════
-function showSummary(){
-  if(!evalHistory.length)return;
-  document.getElementById('summary-overlay').classList.add('show');
-  const h=chess.history({verbose:true});
-  let wGood=0,wTotal=0,bGood=0,bTotal=0,blunders=0,brilliants=0;
-  let worstDelta=0,worstMove=null,worstIdx=-1;
-  evalHistory.forEach((e,i)=>{
-    const ann=e.ann;const mv=h[i];if(!mv||!ann)return;
-    const isW=mv.color==='w';if(isW)wTotal++;else bTotal++;
-    const isBad=ann===ANN.blunder||ann===ANN.mistake||ann===ANN.miss;
-    if(!isBad){if(isW)wGood++;else bGood++;}
-    if(ann===ANN.blunder)blunders++;if(ann===ANN.brilliant)brilliants++;
-    const sign=mv.color==='w'?1:-1;const delta=(e.after-e.before)*sign;
-    if(delta<worstDelta){worstDelta=delta;worstMove=mv;worstIdx=i;}
-  });
-  const wAcc=wTotal>0?Math.round((wGood/wTotal)*100):100;
-  const bAcc=bTotal>0?Math.round((bGood/bTotal)*100):100;
-  document.getElementById('sum-accuracy-w').textContent=wAcc+'%';
-  document.getElementById('sum-accuracy-b').textContent=bAcc+'%';
-  document.getElementById('sum-accuracy-w').className='val'+(wAcc>=80?' good':wAcc<60?' bad':'');
-  document.getElementById('sum-accuracy-b').className='val'+(bAcc>=80?' good':bAcc<60?' bad':'');
-  document.getElementById('sum-blunders').textContent=blunders;
-  document.getElementById('sum-brilliant').textContent=brilliants;
-  if(worstMove){document.getElementById('sum-missed-wrap').style.display='block';document.getElementById('sum-missed').textContent=`Coup ${Math.floor(worstIdx/2)+1}: ${worstMove.color==='w'?'Blancs':'Noirs'} jouent ${worstMove.san} — perte ~${Math.abs(Math.round(worstDelta/100*10)/10)} pions`;}
-  else document.getElementById('sum-missed-wrap').style.display='none';
-  if(chess.in_checkmate()){const winner=chess.turn()==='w'?'Noirs':'Blancs';document.getElementById('sum-title').textContent=`🏆 Victoire des ${winner}`;document.getElementById('sum-sub').textContent='Partie terminée par échec et mat';}
-  else{document.getElementById('sum-title').textContent='📊 Bilan de partie';document.getElementById('sum-sub').textContent=`${h.length} coup${h.length>1?'s':''} joués`;}
-  setTimeout(()=>drawEvalGraph('summary-graph',evalHistory),50);
-}
+// showSummary défini plus bas
 function closeSummary(){document.getElementById('summary-overlay').classList.remove('show');}
 
 // ══════════════════════════════════════════════════════════
@@ -2055,6 +2142,8 @@ function startGame(mode){
   }
   gameMode=mode;chess=new Chess();
   selSq=null;legalMoves=[];lastMove=null;aiRunning=false;evalHistory=[];aiThinking=false;
+  navReset();resetAccuracy();resetMoveTimer();blindfold=false;document.body.classList.remove('blindfold');
+  var bfb=document.getElementById('blindfold-btn');if(bfb){bfb.textContent='👁';bfb.style.color='';}
   document.querySelectorAll('.sq-ann').forEach(e=>e.remove());
   cheatClear();
   const cm=document.getElementById('chat-messages');if(cm)cm.innerHTML='';
@@ -2475,8 +2564,421 @@ function loadTheme(){
   }catch(e){}
 }
 
+// ══════════════════════════════════════════════════════════
+// NAVIGATION HISTORIQUE — flèches ← → ↑ ↓
+// ══════════════════════════════════════════════════════════
+var navSnaps=[];   // [{fen, moveIdx}]
+var navCur=-1;     // index courant (-1 = pas de nav)
+
+function navBuild(){
+  navSnaps=[];
+  var t=new Chess();
+  navSnaps.push({fen:t.fen(),idx:-1});
+  chess.history({verbose:true}).forEach(function(m,i){
+    t.move(m); navSnaps.push({fen:t.fen(),idx:i});
+  });
+}
+
+function navGo(pos){
+  navBuild();
+  if(pos<0) pos=navSnaps.length-1;
+  pos=Math.max(0,Math.min(navSnaps.length-1,pos));
+  navCur=pos;
+  var snap=navSnaps[pos];
+  // Afficher la position sans toucher à chess
+  var old=chess; chess=new Chess(snap.fen);
+  render();
+  chess=old;
+  // Surligner dans l\'historique
+  document.querySelectorAll('.move-san').forEach(function(el){el.classList.remove('nav-hl');});
+  var all=document.querySelectorAll('.move-san');
+  if(snap.idx>=0&&all[snap.idx]) all[snap.idx].classList.add('nav-hl');
+  navUpdateBtns();
+}
+function navPrev(){navBuild();navGo(navCur<0?navSnaps.length-2:navCur-1);}
+function navNext(){
+  navBuild();
+  var target=navCur<0?navSnaps.length-1:navCur+1;
+  if(target>=navSnaps.length-1){navCur=-1;render();document.querySelectorAll('.move-san').forEach(function(el){el.classList.remove('nav-hl');});navUpdateBtns();return;}
+  navGo(target);
+}
+function navGoEnd(){navCur=-1;render();document.querySelectorAll('.move-san').forEach(function(el){el.classList.remove('nav-hl');});navUpdateBtns();}
+function navReset(){navSnaps=[];navCur=-1;navUpdateBtns();document.querySelectorAll('.move-san').forEach(function(el){el.classList.remove('nav-hl');});}
+function navUpdateBtns(){
+  var atStart=navCur===0;
+  var atEnd=navCur===-1||navCur===navSnaps.length-1;
+  var s=document.getElementById('nav-s');var p=document.getElementById('nav-p');
+  var n=document.getElementById('nav-n');var e=document.getElementById('nav-e');
+  if(s){if(atStart)s.setAttribute('disabled','');else s.removeAttribute('disabled');}
+  if(p){if(atStart)p.setAttribute('disabled','');else p.removeAttribute('disabled');}
+  if(n){if(atEnd)n.setAttribute('disabled','');else n.removeAttribute('disabled');}
+  if(e){if(atEnd)e.setAttribute('disabled','');else e.removeAttribute('disabled');}
+}
+
+// Raccourcis clavier globaux
+document.addEventListener('keydown',function(e){
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  if(!document.getElementById('game-screen').classList.contains('active')) return;
+  if(e.key==='ArrowLeft'){e.preventDefault();navPrev();}
+  else if(e.key==='ArrowRight'){e.preventDefault();navNext();}
+  else if(e.key==='ArrowUp'){e.preventDefault();navGo(0);}
+  else if(e.key==='ArrowDown'){e.preventDefault();navGoEnd();}
+  else if(e.key==='Escape'){
+    document.getElementById('summary-overlay').classList.remove('show');
+    document.getElementById('admin-overlay').classList.remove('show');
+  }
+  else if((e.key==='f'||e.key==='F')&&!e.ctrlKey){flipBoard();}
+  else if((e.key==='z'||e.key==='Z')&&e.ctrlKey){e.preventDefault();undoLast();}
+});
+
+// ══════════════════════════════════════════════════════════
+// REJOUER DEPUIS UN COUP
+// ══════════════════════════════════════════════════════════
+function replayFrom(idx){
+  if(!confirm('Reprendre la partie depuis le coup '+(Math.floor(idx/2)+1)+' ?')) return;
+  var h=chess.history({verbose:true}).slice(0,idx+1);
+  chess=new Chess();
+  h.forEach(function(m){chess.move(m);});
+  evalHistory=evalHistory.slice(0,h.length);
+  lastMove=h.length?h[h.length-1]:null;
+  selSq=null;legalMoves=[];aiThinking=false;
+  cancelAnalysis();navReset();
+  moveTimesArr=moveTimesArr.slice(0,h.length);
+  render();updateAll();
+  addChatMsg('Reprise depuis le coup '+(Math.floor(idx/2)+1)+ '.','system');
+}
+
+// ══════════════════════════════════════════════════════════
+// PRÉCISION EN DIRECT
+// ══════════════════════════════════════════════════════════
+var accW=[], accB=[];
+
+function pushAccuracy(color, val){
+  if(color==='w') accW.push(val); else accB.push(val);
+  var sec=document.getElementById('acc-section');
+  if(sec&&(accW.length+accB.length)>0) sec.style.display='block';
+  var avg=function(arr){return arr.length?Math.round(arr.reduce(function(a,b){return a+b;},0)/arr.length):null;};
+  var aw=avg(accW), ab=avg(accB);
+  var wEl=document.getElementById('acc-w');var bEl=document.getElementById('acc-b');
+  if(wEl&&aw!==null){wEl.textContent=aw+'%';wEl.className='av '+(aw>=85?'c-green':aw>=65?'c-gold':'c-red');}
+  if(bEl&&ab!==null){bEl.textContent=ab+'%';bEl.className='av '+(ab>=85?'c-green':ab>=65?'c-gold':'c-red');}
+}
+function resetAccuracy(){
+  accW=[];accB=[];
+  var sec=document.getElementById('acc-section'); if(sec) sec.style.display='none';
+  var w=document.getElementById('acc-w'); if(w){w.textContent='—';w.className='av c-green';}
+  var b=document.getElementById('acc-b'); if(b){b.textContent='—';b.className='av c-green';}
+}
+
+// ══════════════════════════════════════════════════════════
+// STATISTIQUES SESSION
+// ══════════════════════════════════════════════════════════
+var sess={p:0,w:0,d:0};
+function loadSess(){
+  try{var s=JSON.parse(localStorage.getItem('cm_sess')||'{}');sess.p=s.p||0;sess.w=s.w||0;sess.d=s.d||0;}catch(e){}
+  renderSess();
+}
+function saveSess(){try{localStorage.setItem('cm_sess',JSON.stringify(sess));}catch(e){}}
+function recordResult(r){
+  sess.p++;if(r==='win')sess.w++;if(r==='draw')sess.d++;
+  saveSess();renderSess();
+}
+function renderSess(){
+  var p=document.getElementById('sess-p');var w=document.getElementById('sess-w');var d=document.getElementById('sess-d');
+  if(p)p.textContent=sess.p;if(w)w.textContent=sess.w;if(d)d.textContent=sess.d;
+}
+
+// ══════════════════════════════════════════════════════════
+// MODE BLINDFOLD
+// ══════════════════════════════════════════════════════════
+var blindfold=false;
+function toggleBlindFold(){
+  blindfold=!blindfold;
+  document.body.classList.toggle('blindfold',blindfold);
+  var btn=document.getElementById('blindfold-btn');
+  if(btn){btn.textContent=blindfold?'👁\u200D🗨':'👁';btn.style.color=blindfold?'var(--gold)':'';}
+  addChatMsg(blindfold?'Mode Blindfold actif — pièces masquées.':'Mode Blindfold désactivé.','system');
+}
+
+// ══════════════════════════════════════════════════════════
+// MODE MINI (plateau plus petit)
+// ══════════════════════════════════════════════════════════
+var miniMode=false;
+function toggleMiniMode(){
+  miniMode=!miniMode;
+  document.body.classList.toggle('mini-mode',miniMode);
+  var btn=document.getElementById('mini-btn');
+  if(btn){btn.textContent=miniMode?'⊞':'⊡';btn.style.color=miniMode?'var(--gold)':'';}
+}
+
+// ══════════════════════════════════════════════════════════
+// AUTO-FLIP (2 joueurs local)
+// ══════════════════════════════════════════════════════════
+var autoFlip=false;
+function toggleAutoFlip(){
+  autoFlip=!autoFlip;
+  var btn=document.getElementById('autoflip-btn');
+  if(btn) btn.classList.toggle('on',autoFlip);
+}
+function checkAutoFlip(){
+  if(!autoFlip||gameMode!=='local') return;
+  var t=chess.turn();
+  if(t==='w'&&boardFlipped){boardFlipped=false;buildBoard();render();}
+  else if(t==='b'&&!boardFlipped){boardFlipped=true;buildBoard();render();}
+}
+
+// ══════════════════════════════════════════════════════════
+// CHRONO PAR COUP
+// ══════════════════════════════════════════════════════════
+var moveTimesArr=[];
+var moveT0=null;
+function startMoveTimer(){moveT0=Date.now();}
+function stopMoveTimer(){
+  if(!moveT0) return 0;
+  var t=Math.round((Date.now()-moveT0)/100)/10;
+  moveTimesArr.push(t); moveT0=null; return t;
+}
+function resetMoveTimer(){moveT0=null;moveTimesArr=[];startMoveTimer();}
+
+// ══════════════════════════════════════════════════════════
+// INDICATEUR DE MENACES
+// ══════════════════════════════════════════════════════════
+function updateThreatBar(){
+  var bar=document.getElementById('threat-bar');
+  if(!bar) return;
+  if(chess.game_over()){bar.className='threat-bar';return;}
+  // Détecter si le roi du joueur actif est en danger
+  if(chess.in_check()){
+    bar.className='threat-bar show';
+    bar.innerHTML='⚠ <strong>Échec !</strong> Le roi est attaqué.';
+    return;
+  }
+  // Regarder si des pièces importantes sont attaquées
+  var moves=chess.moves({verbose:true});
+  var captures=moves.filter(function(m){return m.captured;});
+  if(captures.length>0){
+    var vals={q:9,r:5,b:3,n:3,p:1};
+    var best=captures.reduce(function(a,b){return (vals[b.captured]||0)>(vals[a.captured]||0)?b:a;});
+    var pname={q:'Dame',r:'Tour',b:'Fou',n:'Cavalier',p:'Pion'};
+    if((vals[best.captured]||0)>=3){
+      bar.className='threat-bar show';
+      bar.innerHTML='💡 Vous pouvez capturer le <strong>'+pname[best.captured]+'</strong> en '+best.to+'.';
+      return;
+    }
+  }
+  bar.className='threat-bar';
+}
+
+// ══════════════════════════════════════════════════════════
+// COPIER PLATEAU EN SVG
+// ══════════════════════════════════════════════════════════
+function copyBoardSVG(){
+  var b=chess.board();
+  var sq=60; var size=sq*8;
+  var lines=['<svg xmlns="http://www.w3.org/2000/svg" width="'+size+'" height="'+size+'" style="border-radius:4px">'];
+  // Cases
+  for(var r=0;r<8;r++){
+    for(var f=0;f<8;f++){
+      var ri=boardFlipped?7-r:r; var fi=boardFlipped?7-f:f;
+      var light=(ri+fi)%2===0;
+      lines.push('<rect x="'+(f*sq)+'" y="'+(r*sq)+'" width="'+sq+'" height="'+sq+'" fill="'+(light?'#eee8d5':'#739556')+'"/>');
+      var p=b[ri][fi];
+      if(p){
+        var sym=SYM[p.color+p.type.toUpperCase()]||'';
+        var cx=f*sq+sq/2; var cy=r*sq+sq/2;
+        lines.push('<text x="'+cx+'" y="'+(cy+2)+'" text-anchor="middle" dominant-baseline="middle" '+
+          'font-size="'+(sq*0.68)+'" fill="'+(p.color==='w'?'#fff':'#1a1a18')+'" '+
+          'stroke="'+(p.color==='w'?'#1a1a18':'#fff')+'" stroke-width="0.5" font-family="serif">'+sym+'</text>');
+      }
+    }
+  }
+  // Coords
+  var fl=['a','b','c','d','e','f','g','h'];
+  for(var i=0;i<8;i++){
+    var fc=boardFlipped?fl[7-i]:fl[i]; var rc=boardFlipped?i+1:8-i;
+    var lc=(i%2===0)?'#eee8d5':'#739556';
+    lines.push('<text x="'+(i*sq+3)+'" y="'+(size-4)+'" font-size="10" fill="'+lc+'" font-family="sans-serif">'+fc+'</text>');
+    lines.push('<text x="3" y="'+(i*sq+13)+'" font-size="10" fill="'+lc+'" font-family="sans-serif">'+rc+'</text>');
+  }
+  lines.push('</svg>');
+  var svg=lines.join('\n');
+  // Flash visuel
+  var fl2=document.getElementById('copy-flash');
+  if(fl2){fl2.className='copy-flash go';setTimeout(function(){fl2.className='copy-flash';},400);}
+  // Copier
+  try{
+    navigator.clipboard.writeText(svg).then(function(){
+      addChatMsg('Plateau copié en SVG — collez dans un éditeur ou Figma !','system');
+    });
+  }catch(ex){
+    var a=document.createElement('a');a.href='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+    a.download='plateau.svg';a.click();
+    addChatMsg('Plateau SVG téléchargé.','system');
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// EXPORT PGN FICHIER + IMPORT PGN
+// ══════════════════════════════════════════════════════════
+function downloadPGN(){
+  var h=chess.history();if(!h.length){addChatMsg('Aucun coup à exporter.','system');return;}
+  var date=new Date().toISOString().slice(0,10).replace(/-/g,'.');
+  var pgn='[Event "ChessMaster Pro"]\n[Date "'+date+'"]\n[White "'+
+    document.getElementById('name-white').textContent+'"]\n[Black "'+
+    document.getElementById('name-black').textContent+'"]\n[Result "*"]\n\n';
+  for(var i=0;i<h.length;i+=2){pgn+=(i/2+1)+'. '+h[i];if(h[i+1])pgn+=' '+h[i+1];pgn+=' ';}
+  pgn+='*';
+  var a=document.createElement('a');
+  a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(pgn);
+  a.download='partie_'+(new Date().toISOString().slice(0,10))+'.pgn';
+  a.click();
+  addChatMsg('Fichier PGN téléchargé.','system');
+}
+
+function importPGN(){
+  document.getElementById('pgn-file-input').click();
+}
+
+function handlePGNFile(e){
+  var file=e.target.files[0];if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var txt=ev.target.result;
+    try{
+      var tmp=new Chess();
+      // Parser les coups depuis le PGN (enlever tags et commentaires)
+      var moves=txt.replace(/\[[^\]]*\]/g,'').replace(/\{[^}]*\}/g,'').replace(/\d+\./g,'').trim().split(/\s+/);
+      moves=moves.filter(function(m){return m&&m!=='*'&&m!=='1-0'&&m!=='0-1'&&m!=='1/2-1/2';});
+      moves.forEach(function(m){tmp.move(m);});
+      chess=tmp;
+      evalHistory=[];lastMove=chess.history({verbose:true}).slice(-1)[0]||null;
+      selSq=null;legalMoves=[];cancelAnalysis();navReset();resetAccuracy();resetMoveTimer();
+      render();updateAll();
+      addChatMsg('PGN importé — '+chess.history().length+' coups chargés.','system');
+    }catch(ex){addChatMsg('Erreur lors de l\'import PGN.','system');}
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+
+// ══════════════════════════════════════════════════════════
+// UPDATEHISTORY enrichi
+// ══════════════════════════════════════════════════════════
+function updateHistory(){
+  var h=chess.history({verbose:true});
+  var el=document.getElementById('move-history');el.innerHTML='';
+  var mc=document.getElementById('move-counter');
+  if(mc) mc.textContent=h.length+' coup'+(h.length>1?'s':'');
+  for(var i=0;i<h.length;i+=2){
+    var row=document.createElement('div');row.className='move-row';
+    var num=document.createElement('span');num.className='move-num';num.textContent=(i/2+1)+'.';
+    // Blancs
+    var w=document.createElement('span');w.className='move-san';
+    var wA=evalHistory[i];var wT=moveTimesArr[i]?'<span class="move-t">'+moveTimesArr[i]+'s</span>':'';
+    var wAnn=wA&&wA.ann&&wA.ann.sym?'<span class="ann-chip" style="background:'+wA.ann.bg+';color:'+wA.ann.fg+'">'+wA.ann.sym+'</span>':'';
+    w.innerHTML=h[i].san+wAnn+wT+'<button class="replay-btn" onclick="replayFrom('+i+')">↺</button>';
+    (function(ii){w.addEventListener('click',function(ev){if(!ev.target.classList.contains('replay-btn'))navGo(ii+1);});})(i);
+    // Noirs
+    var b=document.createElement('span');b.className='move-san';
+    if(h[i+1]){
+      var bA=evalHistory[i+1];var bT=moveTimesArr[i+1]?'<span class="move-t">'+moveTimesArr[i+1]+'s</span>':'';
+      var bAnn=bA&&bA.ann&&bA.ann.sym?'<span class="ann-chip" style="background:'+bA.ann.bg+';color:'+bA.ann.fg+'">'+bA.ann.sym+'</span>':'';
+      b.innerHTML=h[i+1].san+bAnn+bT+'<button class="replay-btn" onclick="replayFrom('+(i+1)+')">↺</button>';
+      (function(ii){b.addEventListener('click',function(ev){if(!ev.target.classList.contains('replay-btn'))navGo(ii+1);});})(i+1);
+    }
+    row.append(num,w,b);el.appendChild(row);
+  }
+  el.scrollTop=el.scrollHeight;
+}
+
+
+// ══════════════════════════════════════════════════════════
+// SHOWSUMMARY enrichi
+// ══════════════════════════════════════════════════════════
+function showSummary(){
+  if(!evalHistory.length) return;
+  document.getElementById('summary-overlay').classList.add('show');
+  var h=chess.history({verbose:true});
+  var wGood=0,wTotal=0,bGood=0,bTotal=0;
+  var blunders=0,brilliants=0,mistakes=0,inaccurate=0;
+  var worstDelta=0,worstMove=null,worstIdx=-1;
+  evalHistory.forEach(function(e,i){
+    var ann=e.ann; var mv=h[i]; if(!mv||!ann) return;
+    var isW=mv.color==='w'; if(isW) wTotal++; else bTotal++;
+    var isBad=ann===ANN.blunder||ann===ANN.mistake||ann===ANN.miss;
+    if(!isBad){if(isW)wGood++;else bGood++;}
+    if(ann===ANN.blunder||ann===ANN.miss) blunders++;
+    if(ann===ANN.brilliant) brilliants++;
+    if(ann===ANN.mistake) mistakes++;
+    if(ann===ANN.inaccurate) inaccurate++;
+    var sign=mv.color==='w'?1:-1; var delta=(e.after-e.before)*sign;
+    if(delta<worstDelta){worstDelta=delta;worstMove=mv;worstIdx=i;}
+  });
+  var wAcc=wTotal>0?Math.round((wGood/wTotal)*100):100;
+  var bAcc=bTotal>0?Math.round((bGood/bTotal)*100):100;
+  document.getElementById('sum-accuracy-w').textContent=wAcc+'%';
+  document.getElementById('sum-accuracy-b').textContent=bAcc+'%';
+  document.getElementById('sum-accuracy-w').className='val'+(wAcc>=80?' good':wAcc<60?' bad':'');
+  document.getElementById('sum-accuracy-b').className='val'+(bAcc>=80?' good':bAcc<60?' bad':'');
+  document.getElementById('sum-blunders').textContent=blunders;
+  document.getElementById('sum-brilliant').textContent=brilliants;
+  document.getElementById('sum-moves').textContent=h.length;
+  document.getElementById('sum-mistakes').textContent=mistakes;
+  document.getElementById('sum-inaccurate').textContent=inaccurate;
+  // Temps moyen
+  var sumEl=document.getElementById('sum-avgtime');
+  if(sumEl&&moveTimesArr.length){
+    var avg=moveTimesArr.reduce(function(a,b){return a+b;},0)/moveTimesArr.length;
+    sumEl.textContent=avg.toFixed(1)+'s';
+  } else if(sumEl) sumEl.textContent='—';
+  // Meilleur coup manqué
+  if(worstMove){
+    document.getElementById('sum-missed-wrap').style.display='block';
+    document.getElementById('sum-missed').textContent='Coup '+(Math.floor(worstIdx/2)+1)+': '+
+      (worstMove.color==='w'?'Blancs':'Noirs')+' — '+worstMove.san+
+      ' — perte ~'+Math.abs(Math.round(worstDelta/100*10)/10)+' pions';
+  } else document.getElementById('sum-missed-wrap').style.display='none';
+  // Titre
+  if(chess.in_checkmate()){
+    var winner=chess.turn()==='w'?'Noirs':'Blancs';
+    document.getElementById('sum-title').textContent='🏆 Victoire des '+winner;
+    document.getElementById('sum-sub').textContent='Partie terminée par échec et mat';
+  } else {
+    document.getElementById('sum-title').textContent='📊 Bilan de partie';
+    document.getElementById('sum-sub').textContent=h.length+' coup'+(h.length>1?'s':'')+' joués';
+  }
+  setTimeout(function(){drawEvalGraph('summary-graph',evalHistory);},50);
+}
+
+// ══════════════════════════════════════════════════════════
+// CHECKEND enrichi (avec enregistrement session)
+// ══════════════════════════════════════════════════════════
+function checkEnd(){
+  if(!chess.game_over()){
+    document.getElementById('gameover-overlay').classList.remove('show');
+    return;
+  }
+  stopClock();
+  var isCheckmate=chess.in_checkmate();
+  if(isCheckmate){
+    var winner=chess.turn()==='w'?'Noirs':'Blancs';
+    showGameOver(chess.turn()==='b'?'♙':'♟','Victoire des '+winner,'Échec et mat');
+    // Enregistrer résultat session
+    if(gameMode!=='ai'){ recordResult('win'); }
+    else {
+      var playerWon=(chess.turn()==='b'); // Si c\'est au bot de jouer et qu\'il est mat, le joueur a gagné
+      recordResult(playerWon?'win':'loss');
+    }
+  } else {
+    showGameOver('½','Partie Nulle',chess.in_stalemate()?'Pat':'Nulle');
+    recordResult('draw');
+  }
+}
+
+
 window.onload=function(){
   loadTheme();
+  loadSess();
   checkAdminSession();
   var mode=sessionStorage.getItem('chessStartMode');
   if(mode){sessionStorage.removeItem('chessStartMode');startGame(mode);}
