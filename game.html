@@ -554,6 +554,12 @@ body.theme-light .threat-bar{background:rgba(200,64,64,0.05)}
 body.theme-light .move-san:hover{background:rgba(0,0,0,0.05)}
 body.theme-light .nav-btn{background:#e8e5de;border-color:#d0cdc6}
 body.theme-light .acc-pill,.sess-pill{background:#f0ede8}
+
+.more-item{display:block;width:100%;background:transparent;border:none;color:var(--text2);
+  padding:7px 10px;border-radius:7px;font-size:0.8rem;cursor:pointer;
+  font-family:'DM Sans',sans-serif;text-align:left;transition:background 0.15s;white-space:nowrap}
+.more-item:hover{background:var(--bg3);color:var(--text)}
+body.theme-light .more-item:hover{background:#e8e5de}
 </style>
 </head>
 <body>
@@ -628,18 +634,27 @@ body.theme-light .acc-pill,.sess-pill{background:#f0ede8}
   <div class="game-topbar">
     <div class="topbar-logo">♟ Chess<span>Master</span></div>
     <span class="topbar-badge badge-local" id="mode-badge">Local</span>
-    <button class="topbar-btn" onclick="undoLast()">↩ Annuler</button>
-    <button class="topbar-btn" onclick="flipBoard()">🔄 Flip</button>
-    <button class="topbar-btn" onclick="exportPGN()">📋 PGN</button>
-    <button class="topbar-btn" onclick="showSummary()">📊 Bilan</button>
-    <button class="topbar-btn" onclick="resetGame()">↺ Reset</button>
-    <button class="topbar-btn" onclick="showScreen('home-screen')">⌂ Menu</button>
+    <button class="topbar-btn" onclick="undoLast()" title="Annuler (Ctrl+Z)">↩</button>
+    <button class="topbar-btn" onclick="flipBoard()" title="Retourner (F)">🔄</button>
+    <button class="topbar-btn" onclick="showSummary()" title="Bilan de partie">📊 Bilan</button>
+    <button class="topbar-btn" onclick="resetGame()" title="Nouvelle partie">↺</button>
+    <button class="topbar-btn" onclick="showScreen('home-screen')" title="Menu principal">⌂</button>
     <div id="engine-badge" style="font-size:0.68rem;font-weight:700;letter-spacing:0.06em;padding:5px 11px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);color:var(--dimmer);white-space:nowrap;">⏳ Moteur…</div>
-    <button class="topbar-btn" id="blindfold-btn" onclick="toggleBlindFold()" title="Mode Blindfold">👁</button>
+    <!-- Menu "Plus" -->
+    <div style="position:relative">
+      <button class="topbar-btn" id="more-btn" onclick="toggleMoreMenu()" title="Plus d'options">⋯</button>
+      <div id="more-menu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:6px;min-width:170px;z-index:200;box-shadow:var(--shadow)">
+        <button class="more-item" onclick="exportPGN();toggleMoreMenu()">📋 Copier PGN</button>
+        <button class="more-item" onclick="downloadPGN();toggleMoreMenu()">⬇ Télécharger PGN</button>
+        <button class="more-item" onclick="importPGN();toggleMoreMenu()">⬆ Importer PGN</button>
+        <hr style="border:none;border-top:1px solid var(--border);margin:4px 0">
+        <button class="more-item" id="blindfold-item" onclick="toggleBlindFold();toggleMoreMenu()">👁 Mode Blindfold</button>
+        <button class="more-item" onclick="copyBoardSVG();toggleMoreMenu()">📷 Copier plateau SVG</button>
+        <button class="more-item" onclick="toggleMiniMode();toggleMoreMenu()">⊡ Plateau compact</button>
+      </div>
+    </div>
+    <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Thème sombre/clair">🌙</button>
     <span class="blindfold-badge" id="blindfold-badge">BLIND</span>
-    <button class="topbar-btn" onclick="toggleMiniMode()" id="mini-btn" title="Réduire plateau">⊡</button>
-    <button class="topbar-btn" onclick="copyBoardSVG()" title="Copier plateau en image">📷</button>
-    <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Thème">🌙</button>
     <div class="copy-flash" id="copy-flash"></div>
   </div>
   <div class="game-layout">
@@ -1217,7 +1232,7 @@ function handleSFGameMsg(line){
 
 // ── Messages Worker ANALYSE ───────────────────────────────
 function handleSFAnalMsg(line){
-  if(!line)return;
+  if(!line) return;
   if(line.startsWith('info')&&line.includes('score')&&line.includes('pv')){
     const scoreMatch=line.match(/score (cp|mate) (-?\d+)/);
     if(scoreMatch){
@@ -1228,7 +1243,14 @@ function handleSFAnalMsg(line){
     }
   }
   if(line.startsWith('bestmove')){
-    if(sfAnalCallback){const cb=sfAnalCallback;sfAnalCallback=null;cb(sfAnalLines[0]&&sfAnalLines[0].score!=null?sfAnalLines[0].score:null);}
+    // CRITIQUE : ignorer les bestmove sans score (réponse à un 'stop' à vide)
+    // Si sfAnalLines est vide, c'est un bestmove parasite → ne pas déclencher le callback
+    if(sfAnalCallback && sfAnalLines.length>0 && sfAnalLines[0] && sfAnalLines[0].score!=null){
+      const cb=sfAnalCallback; sfAnalCallback=null;
+      cb(sfAnalLines[0].score);
+    }
+    // Toujours réinitialiser sfAnalLines après bestmove
+    sfAnalLines=[];
   }
 }
 
@@ -1477,37 +1499,32 @@ async function adminLogin(){
   btn.disabled=true; btn.textContent='⏳ Vérification…'; errEl.textContent='';
   try{
     var controller=new AbortController();
-    var timeout=setTimeout(function(){ controller.abort(); },5000);
-    var res=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:user,pass:pass}),signal:controller.signal});
+    var timeout=setTimeout(function(){ controller.abort(); }, 6000);
+    var res=await fetch('/api/auth',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({user:user,pass:pass}),
+      signal:controller.signal
+    });
     clearTimeout(timeout);
     var data=await res.json();
     if(res.ok&&data.ok){
       adminLoggedIn=true; adminName=data.username; adminToken=data.token;
-      sessionStorage.setItem('_cm_admin',JSON.stringify({token:data.token,user:data.username,exp:Date.now()+8*3600000}));
-      hideAdminLogin(); unlockAdminPanel(data.username);
-      addChatMsg('⚡ Mode indices admin activé — bienvenue '+data.username+' !','system');
+      sessionStorage.setItem('_cm_admin',JSON.stringify({
+        token:data.token, user:data.username, exp:Date.now()+8*3600000
+      }));
+      hideAdminLogin();
+      unlockAdminPanel(data.username);
+      addChatMsg('Mode indices admin activé — bienvenue '+data.username+' !','system');
     } else {
       errEl.textContent='❌ '+(data.error||'Identifiants incorrects');
       document.getElementById('admin-pass-input').value='';
       btn.disabled=false; btn.textContent='🔑 Se connecter';
     }
   }catch(e){
-    // Fallback local via SHA-256
-    var encoder=new TextEncoder();
-    var hBuf=await crypto.subtle.digest('SHA-256',encoder.encode(user+':'+pass));
-    var hHex=Array.from(new Uint8Array(hBuf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
-    var vBuf=await crypto.subtle.digest('SHA-256',encoder.encode('sucoona:Lopos562se'));
-    var vHex=Array.from(new Uint8Array(vBuf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
-    if(hHex===vHex){
-      var token=btoa(user+':local:'+Date.now());
-      adminLoggedIn=true; adminName=user; adminToken=token;
-      sessionStorage.setItem('_cm_admin',JSON.stringify({token:token,user:user,exp:Date.now()+8*3600000}));
-      hideAdminLogin(); unlockAdminPanel(user);
-      addChatMsg('⚡ Mode admin activé — bienvenue '+user+' !','system');
-    } else {
-      errEl.textContent='⚠ Erreur réseau ou identifiants incorrects.';
-      btn.disabled=false; btn.textContent='🔑 Se connecter';
-    }
+    var msg=e.name==='AbortError'?'Serveur inaccessible (timeout).':'Erreur réseau — vérifiez votre connexion.';
+    errEl.textContent='⚠ '+msg;
+    btn.disabled=false; btn.textContent='🔑 Se connecter';
   }
 }
 
@@ -1718,14 +1735,20 @@ function sfEval(fen, movetime){
   if(!movetime) movetime=200;
   return new Promise(function(resolve){
     if(!sfAnalReady||!sfAnal){ resolve(null); return; }
-    // Timeout de sécurité : si Stockfish ne répond pas, on résout avec null
-    var timer=setTimeout(function(){ sfAnalCallback=null; resolve(null); }, movetime+2000);
+    // Timeout de sécurité
+    var timer=setTimeout(function(){
+      sfAnalCallback=null;
+      sfAnalLines=[];
+      resolve(null);
+    }, movetime+3000);
     sfAnalLines=[];
     sfAnalCallback=function(score){
       clearTimeout(timer);
       resolve(score);
     };
-    sfAnalSend('stop'); // Annule toute analyse précédente proprement
+    // PAS de stop ici — cancelAnalysis() le fait déjà avant sfEval()
+    // Envoyer stop ici causerait une race condition : le bestmove du stop
+    // déclencherait le callback avant que la vraie recherche commence
     sfAnalSend('setoption name MultiPV value 1');
     sfAnalSend('position fen '+fen);
     sfAnalSend('go movetime '+movetime);
@@ -1780,8 +1803,10 @@ function getMoveContext(move, ann, diff, evalAfterCp){
 }
 
 function cancelAnalysis(){
-  if(sfAnal&&sfAnalReady){ try{ sfAnal.postMessage('stop'); }catch(e){} }
+  // Effacer callback EN PREMIER pour que le bestmove du stop soit ignoré
   sfAnalCallback=null;
+  sfAnalLines=[];
+  if(sfAnal&&sfAnalReady){ try{ sfAnal.postMessage('stop'); }catch(e){} }
   if(analPendingUpdate){ clearTimeout(analPendingUpdate); analPendingUpdate=null; }
   aiRunning=false;
 }
@@ -2975,6 +3000,22 @@ function checkEnd(){
   }
 }
 
+
+
+// ── Menu "Plus" ───────────────────────────────────────────
+function toggleMoreMenu(){
+  var m=document.getElementById('more-menu');
+  if(!m) return;
+  var open=m.style.display==='block';
+  m.style.display=open?'none':'block';
+}
+document.addEventListener('click',function(e){
+  var menu=document.getElementById('more-menu');
+  var btn=document.getElementById('more-btn');
+  if(menu&&btn&&!menu.contains(e.target)&&e.target!==btn&&!btn.contains(e.target)){
+    menu.style.display='none';
+  }
+});
 
 window.onload=function(){
   loadTheme();
