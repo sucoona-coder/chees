@@ -1,9 +1,8 @@
 {
   "name": "chessmaster-pro",
   "version": "1.0.0",
-  "description": "ChessMaster Pro — Stockfish 18",
   "dependencies": {
-    "stockfish": "^16.0.0"
+    "chess.js": "^0.13.4"
   },
   "engines": {
     "node": ">=18"
