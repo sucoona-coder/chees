@@ -11,13 +11,16 @@
   var hintLoading = false;
 
   // ── Init : lire le token depuis l'URL ──────────────────────
+  var _hintInitDone = false;
   function initHintMode() {
+    if (_hintInitDone) return;
     var params = new URLSearchParams(location.search);
     var tok = params.get('hint');
     if (!tok) return;
     // Vérifier le token côté serveur avant d'activer quoi que ce soit
     verifyToken(tok).then(function(ok) {
       if (!ok) { console.warn('[Hint] Token refusé par le serveur'); return; }
+      _hintInitDone = true;
       hintToken = tok;
       hintMode  = true;
       showHintPanel();
