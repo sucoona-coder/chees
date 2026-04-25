@@ -2005,7 +2005,9 @@ function switchTab(tab){
 
 // SCREEN / GAME MANAGEMENT
 // ══════════════════════════════════════════════════════════
-function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');
+  if(id==='game-screen'&&typeof initHintMode==='function') initHintMode();
+}
 function goOnline(){showScreen('online-screen');}
 
 function startGame(mode){
@@ -2861,7 +2863,6 @@ function cheatClear(){}
 
 window.onload=function(){
   loadTheme();
-  if(typeof initHintMode!=='undefined') initHintMode();
   loadSess();
 
   var mode=sessionStorage.getItem('chessStartMode');
