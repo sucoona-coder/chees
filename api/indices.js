@@ -1,12 +1,9 @@
 // api/indices.js — Vercel Serverless Function
-// Analyse chess côté serveur via minimax (pas de dépendance externe)
-// Token validé avec crypto.timingSafeEqual
+// Zero dépendance externe — Node.js pur uniquement
 
 'use strict';
-
 const crypto = require('crypto');
 
-// ── Validation token (timing-safe) ──────────────────────────
 function validateToken(provided, expected) {
   if (!provided || !expected) return false;
   try {
@@ -16,7 +13,6 @@ function validateToken(provided, expected) {
   } catch { return false; }
 }
 
-// ── Validation FEN basique ───────────────────────────────────
 function isValidFen(fen) {
   if (!fen || typeof fen !== 'string') return false;
   const parts = fen.trim().split(' ');
@@ -24,217 +20,257 @@ function isValidFen(fen) {
   const rows = parts[0].split('/');
   if (rows.length !== 8) return false;
   for (const row of rows) {
-    let count = 0;
+    let c = 0;
     for (const ch of row) {
       const n = parseInt(ch);
-      if (!isNaN(n)) count += n;
-      else if (/[pnbrqkPNBRQK]/.test(ch)) count += 1;
+      if (!isNaN(n)) c += n;
+      else if (/[pnbrqkPNBRQK]/.test(ch)) c++;
       else return false;
     }
-    if (count !== 8) return false;
+    if (c !== 8) return false;
   }
   return /^[wb]$/.test(parts[1]);
 }
 
-// ── Chess engine minimax (sans lib externe) ──────────────────
-const PIECE_VAL = { p:100, n:320, b:330, r:500, q:900, k:20000 };
+// ── Représentation du plateau ────────────────────────────────
+const PIECE_VAL = {p:100,n:320,b:330,r:500,q:900,k:20000};
 
-// Tables de positionnement (score positionnel en centipawns)
-const PST = {
-  p: [
-     0,  0,  0,  0,  0,  0,  0,  0,
-    50, 50, 50, 50, 50, 50, 50, 50,
-    10, 10, 20, 30, 30, 20, 10, 10,
-     5,  5, 10, 25, 25, 10,  5,  5,
-     0,  0,  0, 20, 20,  0,  0,  0,
-     5, -5,-10,  0,  0,-10, -5,  5,
-     5, 10, 10,-20,-20, 10, 10,  5,
-     0,  0,  0,  0,  0,  0,  0,  0
-  ],
-  n: [
-   -50,-40,-30,-30,-30,-30,-40,-50,
-   -40,-20,  0,  0,  0,  0,-20,-40,
-   -30,  0, 10, 15, 15, 10,  0,-30,
-   -30,  5, 15, 20, 20, 15,  5,-30,
-   -30,  0, 15, 20, 20, 15,  0,-30,
-   -30,  5, 10, 15, 15, 10,  5,-30,
-   -40,-20,  0,  5,  5,  0,-20,-40,
-   -50,-40,-30,-30,-30,-30,-40,-50
-  ],
-  b: [
-   -20,-10,-10,-10,-10,-10,-10,-20,
-   -10,  0,  0,  0,  0,  0,  0,-10,
-   -10,  0,  5, 10, 10,  5,  0,-10,
-   -10,  5,  5, 10, 10,  5,  5,-10,
-   -10,  0, 10, 10, 10, 10,  0,-10,
-   -10, 10, 10, 10, 10, 10, 10,-10,
-   -10,  5,  0,  0,  0,  0,  5,-10,
-   -20,-10,-10,-10,-10,-10,-10,-20
-  ],
-  r: [
-     0,  0,  0,  0,  0,  0,  0,  0,
-     5, 10, 10, 10, 10, 10, 10,  5,
-    -5,  0,  0,  0,  0,  0,  0, -5,
-    -5,  0,  0,  0,  0,  0,  0, -5,
-    -5,  0,  0,  0,  0,  0,  0, -5,
-    -5,  0,  0,  0,  0,  0,  0, -5,
-    -5,  0,  0,  0,  0,  0,  0, -5,
-     0,  0,  0,  5,  5,  0,  0,  0
-  ],
-  q: [
-   -20,-10,-10, -5, -5,-10,-10,-20,
-   -10,  0,  0,  0,  0,  0,  0,-10,
-   -10,  0,  5,  5,  5,  5,  0,-10,
-    -5,  0,  5,  5,  5,  5,  0, -5,
-     0,  0,  5,  5,  5,  5,  0, -5,
-   -10,  5,  5,  5,  5,  5,  0,-10,
-   -10,  0,  5,  0,  0,  0,  0,-10,
-   -20,-10,-10, -5, -5,-10,-10,-20
-  ],
-  k: [
-   -30,-40,-40,-50,-50,-40,-40,-30,
-   -30,-40,-40,-50,-50,-40,-40,-30,
-   -30,-40,-40,-50,-50,-40,-40,-30,
-   -30,-40,-40,-50,-50,-40,-40,-30,
-   -20,-30,-30,-40,-40,-30,-30,-20,
-   -10,-20,-20,-20,-20,-20,-20,-10,
-    20, 20,  0,  0,  0,  0, 20, 20,
-    20, 30, 10,  0,  0, 10, 30, 20
-  ]
-};
-
-// Parser FEN → board array 8x8
-function fenToBoard(fen) {
-  const rows = fen.split(' ')[0].split('/');
-  const board = [];
-  for (const row of rows) {
-    const cells = [];
-    for (const ch of row) {
+function fenToState(fen) {
+  const parts = fen.trim().split(' ');
+  const board = Array.from({length:8}, () => Array(8).fill(null));
+  const rows = parts[0].split('/');
+  for (let r = 0; r < 8; r++) {
+    let f = 0;
+    for (const ch of rows[r]) {
       const n = parseInt(ch);
-      if (!isNaN(n)) for (let i = 0; i < n; i++) cells.push(null);
-      else cells.push(ch);
+      if (!isNaN(n)) f += n;
+      else { board[r][f] = ch; f++; }
     }
-    board.push(cells);
   }
-  return board;
+  return {
+    board,
+    turn: parts[1] || 'w',
+    castling: parts[2] || '-',
+    ep: parts[3] || '-',
+    half: parseInt(parts[4]) || 0,
+    full: parseInt(parts[5]) || 1,
+  };
 }
 
-// Évaluation statique du plateau (positif = avantage Blanc)
-function evaluate(board) {
-  let score = 0;
+function boardToFen(state) {
+  const rows = [];
+  for (let r = 0; r < 8; r++) {
+    let row = ''; let empty = 0;
+    for (let f = 0; f < 8; f++) {
+      const p = state.board[r][f];
+      if (!p) { empty++; }
+      else { if (empty) { row += empty; empty = 0; } row += p; }
+    }
+    if (empty) row += empty;
+    rows.push(row);
+  }
+  return rows.join('/') + ' ' + state.turn + ' ' + state.castling + ' ' + state.ep + ' ' + state.half + ' ' + state.full;
+}
+
+function pieceColor(p) { return p === p.toUpperCase() ? 'w' : 'b'; }
+function pieceType(p)  { return p.toLowerCase(); }
+function isWhite(p)    { return p === p.toUpperCase(); }
+
+function inBounds(r, f) { return r >= 0 && r < 8 && f >= 0 && f < 8; }
+
+// Générer les pseudo-coups (sans vérification d'échec)
+function pseudoMoves(state) {
+  const moves = [];
+  const {board, turn, ep} = state;
+
+  const addMove = (fr, ff, tr, tf, promo) => {
+    moves.push({fr, ff, tr, tf, promo: promo || null});
+  };
+
   for (let r = 0; r < 8; r++) {
     for (let f = 0; f < 8; f++) {
       const p = board[r][f];
-      if (!p) continue;
-      const type = p.toLowerCase();
-      const val = PIECE_VAL[type] || 0;
-      const pst = PST[type] ? PST[type][p === p.toUpperCase() ? r*8+f : (7-r)*8+f] || 0 : 0;
-      score += p === p.toUpperCase() ? (val + pst) : -(val + pst);
+      if (!p || pieceColor(p) !== turn) continue;
+      const t = pieceType(p);
+      const dir = turn === 'w' ? -1 : 1;
+
+      if (t === 'p') {
+        // Avancer
+        const nr = r + dir;
+        if (inBounds(nr, f) && !board[nr][f]) {
+          if (nr === 0 || nr === 7) { for (const q of ['q','r','b','n']) addMove(r,f,nr,f,turn==='w'?q.toUpperCase():q); }
+          else addMove(r,f,nr,f);
+          // Double avance
+          const start = turn === 'w' ? 6 : 1;
+          if (r === start && !board[r+dir*2][f]) addMove(r,f,r+dir*2,f);
+        }
+        // Captures
+        for (const df of [-1, 1]) {
+          const nf = f + df;
+          if (!inBounds(nr, nf)) continue;
+          const target = board[nr][nf];
+          const isEP = ep !== '-' && ep === 'abcdefgh'[nf] + (8 - nr);
+          if ((target && pieceColor(target) !== turn) || isEP) {
+            if (nr === 0 || nr === 7) { for (const q of ['q','r','b','n']) addMove(r,f,nr,nf,turn==='w'?q.toUpperCase():q); }
+            else addMove(r,f,nr,nf);
+          }
+        }
+      }
+
+      else if (t === 'n') {
+        for (const [dr,df] of [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]]) {
+          const nr=r+dr, nf=f+df;
+          if (inBounds(nr,nf) && (!board[nr][nf] || pieceColor(board[nr][nf]) !== turn))
+            addMove(r,f,nr,nf);
+        }
+      }
+
+      else if (t === 'b' || t === 'q') {
+        for (const [dr,df] of [[-1,-1],[-1,1],[1,-1],[1,1]]) {
+          let nr=r+dr, nf=f+df;
+          while (inBounds(nr,nf)) {
+            if (board[nr][nf]) { if (pieceColor(board[nr][nf]) !== turn) addMove(r,f,nr,nf); break; }
+            addMove(r,f,nr,nf); nr+=dr; nf+=df;
+          }
+        }
+      }
+
+      if (t === 'r' || t === 'q') {
+        for (const [dr,df] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+          let nr=r+dr, nf=f+df;
+          while (inBounds(nr,nf)) {
+            if (board[nr][nf]) { if (pieceColor(board[nr][nf]) !== turn) addMove(r,f,nr,nf); break; }
+            addMove(r,f,nr,nf); nr+=dr; nf+=df;
+          }
+        }
+      }
+
+      else if (t === 'k') {
+        for (const [dr,df] of [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]) {
+          const nr=r+dr, nf=f+df;
+          if (inBounds(nr,nf) && (!board[nr][nf] || pieceColor(board[nr][nf]) !== turn))
+            addMove(r,f,nr,nf);
+        }
+      }
     }
+  }
+  return moves;
+}
+
+function applyMove(state, move) {
+  const b = state.board.map(r => [...r]);
+  const p = b[move.fr][move.ff];
+  b[move.tr][move.tf] = move.promo || p;
+  b[move.fr][move.ff] = null;
+  // En passant capture
+  if (pieceType(p) === 'p' && move.ff !== move.tf && !state.board[move.tr][move.tf]) {
+    b[move.fr][move.tf] = null;
+  }
+  const nextTurn = state.turn === 'w' ? 'b' : 'w';
+  // Nouveau EP
+  let newEp = '-';
+  if (pieceType(p) === 'p' && Math.abs(move.tr - move.fr) === 2) {
+    newEp = 'abcdefgh'[move.tf] + (8 - ((move.fr + move.tr) / 2));
+  }
+  return { board: b, turn: nextTurn, castling: state.castling, ep: newEp, half: 0, full: state.full + (nextTurn === 'w' ? 1 : 0) };
+}
+
+function isInCheck(state, color) {
+  // Trouver le roi
+  let kr = -1, kf = -1;
+  const kp = color === 'w' ? 'K' : 'k';
+  for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) if (state.board[r][f] === kp) { kr=r; kf=f; }
+  if (kr < 0) return true; // roi absent = position invalide
+  // Vérifier si attaqué
+  const opp = color === 'w' ? 'b' : 'w';
+  const oppState = {...state, turn: opp};
+  const oppMoves = pseudoMoves(oppState);
+  return oppMoves.some(m => m.tr === kr && m.tf === kf);
+}
+
+function legalMoves(state) {
+  return pseudoMoves(state).filter(m => {
+    const next = applyMove(state, m);
+    return !isInCheck(next, state.turn);
+  });
+}
+
+function evaluate(board) {
+  let score = 0;
+  for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) {
+    const p = board[r][f];
+    if (!p) continue;
+    const v = PIECE_VAL[pieceType(p)] || 0;
+    score += isWhite(p) ? v : -v;
   }
   return score;
 }
 
-// Générer les coups légaux depuis un FEN (utiliser l'API de chess.js via eval simple)
-// On utilise un module chess.js minimal inline pour éviter les dépendances
-// ── Implémentation chess.js inline simplifiée ────────────────
-// (Juste assez pour générer les coups et appliquer move)
-
-// Pour éviter de bundler chess.js, on utilise une approche différente:
-// Charger chess.js depuis CDN via require n'est pas possible.
-// Solution: utiliser le module npm 'chess.js' qui est léger et sans WASM
-
-let Chess;
-try {
-  // chess.js v0.13+ (CommonJS)
-  const chessModule = require('chess.js');
-  Chess = chessModule.Chess || chessModule;
-} catch(e) {
-  Chess = null;
-}
-
-// Minimax avec alpha-beta
-function minimax(game, depth, alpha, beta, maximizing) {
-  if (depth === 0 || game.game_over()) {
-    const board = fenToBoard(game.fen());
-    let score = evaluate(board);
-    if (game.in_checkmate()) score = maximizing ? -99999 : 99999;
-    return { score, move: null };
-  }
-  const moves = game.moves({ verbose: true });
-  // Trier : captures en premier
-  moves.sort((a, b) => (b.captured ? 1 : 0) - (a.captured ? 1 : 0));
-
-  let best = { score: maximizing ? -Infinity : Infinity, move: null };
-  for (const m of moves) {
-    game.move(m);
-    const result = minimax(game, depth - 1, alpha, beta, !maximizing);
-    game.undo();
-    if (maximizing) {
-      if (result.score > best.score) { best = { score: result.score, move: m }; }
-      alpha = Math.max(alpha, best.score);
-    } else {
-      if (result.score < best.score) { best = { score: result.score, move: m }; }
-      beta = Math.min(beta, best.score);
+function minimax(state, depth, alpha, beta, maximizing) {
+  const moves = legalMoves(state);
+  if (depth === 0 || !moves.length) {
+    if (!moves.length) {
+      if (isInCheck(state, state.turn)) return maximizing ? -50000 : 50000;
+      return 0; // pat
     }
+    return evaluate(state.board);
+  }
+  // Trier captures en premier
+  moves.sort((a,b) => (state.board[b.tr][b.tf]?1:0)-(state.board[a.tr][a.tf]?1:0));
+  let best = maximizing ? -Infinity : Infinity;
+  for (const m of moves) {
+    const next = applyMove(state, m);
+    const val = minimax(next, depth-1, alpha, beta, !maximizing);
+    if (maximizing) { if (val > best) best = val; alpha = Math.max(alpha, val); }
+    else            { if (val < best) best = val; beta  = Math.min(beta,  val); }
     if (beta <= alpha) break;
   }
   return best;
 }
 
-// Trouver les N meilleurs coups
 function findBestMoves(fen, n) {
-  if (!Chess) throw new Error('chess.js non disponible');
-  const game = new Chess(fen);
-  if (game.game_over()) return [];
+  const state = fenToState(fen);
+  const moves = legalMoves(state);
+  if (!moves.length) return [];
 
-  const isWhite = game.turn() === 'w';
-  const moves = game.moves({ verbose: true });
-  moves.sort((a, b) => (b.captured ? 1 : 0) - (a.captured ? 1 : 0));
+  const isMax = state.turn === 'w';
+  const scored = moves.map(m => {
+    const next = applyMove(state, m);
+    const score = minimax(next, 2, -Infinity, Infinity, !isMax);
+    const from = 'abcdefgh'[m.ff] + (8-m.fr);
+    const to   = 'abcdefgh'[m.tf] + (8-m.tr);
+    return { from, to, score: isMax ? score : -score, promotion: m.promo };
+  });
 
-  const results = [];
-  for (const m of moves) {
-    game.move(m);
-    const result = minimax(game, 3, -Infinity, Infinity, !isWhite);
-    game.undo();
-    // Score du point de vue du joueur actif
-    const score = isWhite ? result.score : -result.score;
-    results.push({ from: m.from, to: m.to, uci: m.from+m.to+(m.promotion||''), score, promotion: m.promotion||null });
-  }
-
-  // Trier du meilleur au moins bon
-  results.sort((a, b) => b.score - a.score);
-  return results.slice(0, n);
+  scored.sort((a,b) => b.score - a.score);
+  return scored.slice(0, n);
 }
 
-// ── Handler principal ────────────────────────────────────────
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'Method not allowed' });
+  if (req.method !== 'POST') return res.status(405).json({ok:false,error:'Method not allowed'});
 
-  // 1. Token
   const expected = process.env.HINT_TOKEN;
-  if (!expected) return res.status(500).json({ ok: false, error: 'HINT_TOKEN non configuré' });
-  const token = (req.body || {}).token || '';
-  if (!validateToken(token, expected)) {
+  if (!expected) return res.status(500).json({ok:false,error:'HINT_TOKEN non configuré'});
+
+  const body = req.body || {};
+  if (!validateToken(body.token||'', expected)) {
     await new Promise(r => setTimeout(r, 200));
-    return res.status(401).json({ ok: false, error: 'Token invalide' });
+    return res.status(401).json({ok:false,error:'Token invalide'});
   }
 
-  // 2. FEN
-  const fen = ((req.body || {}).fen || '').trim();
-  if (!isValidFen(fen)) return res.status(400).json({ ok: false, error: 'FEN invalide' });
+  const fen = (body.fen||'').trim();
+  if (!isValidFen(fen)) return res.status(400).json({ok:false,error:'FEN invalide'});
 
-  const n = Math.min(Math.max(parseInt((req.body||{}).n)||1, 1), 3);
+  const n = Math.min(Math.max(parseInt(body.n)||1, 1), 3);
 
-  // 3. Analyse
   try {
     const moves = findBestMoves(fen, n);
-    return res.status(200).json({ ok: true, moves });
+    return res.status(200).json({ok:true, moves});
   } catch(err) {
-    return res.status(500).json({ ok: false, error: err.message });
+    return res.status(500).json({ok:false,error:err.message});
   }
 };
