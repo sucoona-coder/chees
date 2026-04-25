@@ -1,20 +1,28 @@
-// api/hint.js — Vercel Serverless Function
-// Stockfish tourne CÔTÉ SERVEUR — aucune logique d'analyse côté client
-// Token validé avec crypto.timingSafeEqual (résistant aux timing attacks)
-// Variable env requise : HINT_TOKEN (définir sur Vercel dashboard)
+// api/indices.js — Vercel Serverless Function
+// Analyse chess côté serveur via minimax (pas de dépendance externe)
+// Token validé avec crypto.timingSafeEqual
 
 'use strict';
 
 const crypto = require('crypto');
 
-// ── Validation FEN basique ───────────────────────────────
+// ── Validation token (timing-safe) ──────────────────────────
+function validateToken(provided, expected) {
+  if (!provided || !expected) return false;
+  try {
+    const a = Buffer.from(crypto.createHash('sha256').update(String(provided)).digest('hex'));
+    const b = Buffer.from(crypto.createHash('sha256').update(String(expected)).digest('hex'));
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+  } catch { return false; }
+}
+
+// ── Validation FEN basique ───────────────────────────────────
 function isValidFen(fen) {
   if (!fen || typeof fen !== 'string') return false;
   const parts = fen.trim().split(' ');
   if (parts.length < 2) return false;
   const rows = parts[0].split('/');
   if (rows.length !== 8) return false;
-  // Chaque rangée doit sommer à 8 cases
   for (const row of rows) {
     let count = 0;
     for (const ch of row) {
@@ -28,148 +36,205 @@ function isValidFen(fen) {
   return /^[wb]$/.test(parts[1]);
 }
 
-// ── Validation token par comparaison sûre (timing-safe) ──
-function validateToken(provided, expected) {
-  if (!provided || !expected) return false;
-  try {
-    const a = crypto.createHash('sha256').update(provided).digest();
-    const b = crypto.createHash('sha256').update(expected).digest();
-    // timingSafeEqual évite les timing attacks sur la comparaison
-    return a.length === b.length && crypto.timingSafeEqual(a, b);
-  } catch {
-    return false;
-  }
-}
+// ── Chess engine minimax (sans lib externe) ──────────────────
+const PIECE_VAL = { p:100, n:320, b:330, r:500, q:900, k:20000 };
 
-// ── Analyse Stockfish via UCI ────────────────────────────
-// Utilise le package npm 'stockfish' (CommonJS, pas de WASM)
-function analyzeWithStockfish(fen, movetime, multiPV) {
-  return new Promise((resolve, reject) => {
-    let sf;
-    try {
-      // Le package stockfish expose le moteur comme fonction
-      const Stockfish = require('stockfish');
-      sf = Stockfish();
-    } catch (err) {
-      return reject(new Error('Stockfish non disponible: ' + err.message));
+// Tables de positionnement (score positionnel en centipawns)
+const PST = {
+  p: [
+     0,  0,  0,  0,  0,  0,  0,  0,
+    50, 50, 50, 50, 50, 50, 50, 50,
+    10, 10, 20, 30, 30, 20, 10, 10,
+     5,  5, 10, 25, 25, 10,  5,  5,
+     0,  0,  0, 20, 20,  0,  0,  0,
+     5, -5,-10,  0,  0,-10, -5,  5,
+     5, 10, 10,-20,-20, 10, 10,  5,
+     0,  0,  0,  0,  0,  0,  0,  0
+  ],
+  n: [
+   -50,-40,-30,-30,-30,-30,-40,-50,
+   -40,-20,  0,  0,  0,  0,-20,-40,
+   -30,  0, 10, 15, 15, 10,  0,-30,
+   -30,  5, 15, 20, 20, 15,  5,-30,
+   -30,  0, 15, 20, 20, 15,  0,-30,
+   -30,  5, 10, 15, 15, 10,  5,-30,
+   -40,-20,  0,  5,  5,  0,-20,-40,
+   -50,-40,-30,-30,-30,-30,-40,-50
+  ],
+  b: [
+   -20,-10,-10,-10,-10,-10,-10,-20,
+   -10,  0,  0,  0,  0,  0,  0,-10,
+   -10,  0,  5, 10, 10,  5,  0,-10,
+   -10,  5,  5, 10, 10,  5,  5,-10,
+   -10,  0, 10, 10, 10, 10,  0,-10,
+   -10, 10, 10, 10, 10, 10, 10,-10,
+   -10,  5,  0,  0,  0,  0,  5,-10,
+   -20,-10,-10,-10,-10,-10,-10,-20
+  ],
+  r: [
+     0,  0,  0,  0,  0,  0,  0,  0,
+     5, 10, 10, 10, 10, 10, 10,  5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+     0,  0,  0,  5,  5,  0,  0,  0
+  ],
+  q: [
+   -20,-10,-10, -5, -5,-10,-10,-20,
+   -10,  0,  0,  0,  0,  0,  0,-10,
+   -10,  0,  5,  5,  5,  5,  0,-10,
+    -5,  0,  5,  5,  5,  5,  0, -5,
+     0,  0,  5,  5,  5,  5,  0, -5,
+   -10,  5,  5,  5,  5,  5,  0,-10,
+   -10,  0,  5,  0,  0,  0,  0,-10,
+   -20,-10,-10, -5, -5,-10,-10,-20
+  ],
+  k: [
+   -30,-40,-40,-50,-50,-40,-40,-30,
+   -30,-40,-40,-50,-50,-40,-40,-30,
+   -30,-40,-40,-50,-50,-40,-40,-30,
+   -30,-40,-40,-50,-50,-40,-40,-30,
+   -20,-30,-30,-40,-40,-30,-30,-20,
+   -10,-20,-20,-20,-20,-20,-20,-10,
+    20, 20,  0,  0,  0,  0, 20, 20,
+    20, 30, 10,  0,  0, 10, 30, 20
+  ]
+};
+
+// Parser FEN → board array 8x8
+function fenToBoard(fen) {
+  const rows = fen.split(' ')[0].split('/');
+  const board = [];
+  for (const row of rows) {
+    const cells = [];
+    for (const ch of row) {
+      const n = parseInt(ch);
+      if (!isNaN(n)) for (let i = 0; i < n; i++) cells.push(null);
+      else cells.push(ch);
     }
-
-    const lines = [];
-    let bestmove = null;
-    const timeout = setTimeout(() => {
-      try { sf.postMessage('quit'); } catch {}
-      resolve(buildResults(lines, bestmove, multiPV));
-    }, movetime + 3000);
-
-    sf.onmessage = function(line) {
-      if (typeof line === 'object') line = line.data || '';
-      if (!line) return;
-
-      // Parser les lignes 'info score'
-      if (line.startsWith('info') && line.includes('score') && line.includes(' pv ')) {
-        const pvMatch  = line.match(/multipv (\d+)/);
-        const cpMatch  = line.match(/score (cp|mate) (-?\d+)/);
-        const pvmatch  = line.match(/ pv (.+)$/);
-        if (cpMatch && pvmatch) {
-          const pvNum = pvMatch ? parseInt(pvMatch[1]) - 1 : 0;
-          let score = 0;
-          if (cpMatch[1] === 'cp') score = parseInt(cpMatch[2]);
-          else {
-            const m = parseInt(cpMatch[2]);
-            score = m > 0 ? 99000 - m : -99000 - m;
-          }
-          const moves = pvmatch[1].trim().split(' ');
-          lines[pvNum] = { score, moves };
-        }
-      }
-
-      if (line.startsWith('bestmove')) {
-        bestmove = line.split(' ')[1] || null;
-        clearTimeout(timeout);
-        try { sf.postMessage('quit'); } catch {}
-        resolve(buildResults(lines, bestmove, multiPV));
-      }
-    };
-
-    // Initialiser et lancer la recherche
-    sf.postMessage('uci');
-    sf.postMessage('ucinewgame');
-    sf.postMessage('setoption name MultiPV value ' + multiPV);
-    sf.postMessage('position fen ' + fen);
-    sf.postMessage('go movetime ' + movetime);
-  });
+    board.push(cells);
+  }
+  return board;
 }
 
-function buildResults(lines, bestmove, multiPV) {
+// Évaluation statique du plateau (positif = avantage Blanc)
+function evaluate(board) {
+  let score = 0;
+  for (let r = 0; r < 8; r++) {
+    for (let f = 0; f < 8; f++) {
+      const p = board[r][f];
+      if (!p) continue;
+      const type = p.toLowerCase();
+      const val = PIECE_VAL[type] || 0;
+      const pst = PST[type] ? PST[type][p === p.toUpperCase() ? r*8+f : (7-r)*8+f] || 0 : 0;
+      score += p === p.toUpperCase() ? (val + pst) : -(val + pst);
+    }
+  }
+  return score;
+}
+
+// Générer les coups légaux depuis un FEN (utiliser l'API de chess.js via eval simple)
+// On utilise un module chess.js minimal inline pour éviter les dépendances
+// ── Implémentation chess.js inline simplifiée ────────────────
+// (Juste assez pour générer les coups et appliquer move)
+
+// Pour éviter de bundler chess.js, on utilise une approche différente:
+// Charger chess.js depuis CDN via require n'est pas possible.
+// Solution: utiliser le module npm 'chess.js' qui est léger et sans WASM
+
+let Chess;
+try {
+  // chess.js v0.13+ (CommonJS)
+  const chessModule = require('chess.js');
+  Chess = chessModule.Chess || chessModule;
+} catch(e) {
+  Chess = null;
+}
+
+// Minimax avec alpha-beta
+function minimax(game, depth, alpha, beta, maximizing) {
+  if (depth === 0 || game.game_over()) {
+    const board = fenToBoard(game.fen());
+    let score = evaluate(board);
+    if (game.in_checkmate()) score = maximizing ? -99999 : 99999;
+    return { score, move: null };
+  }
+  const moves = game.moves({ verbose: true });
+  // Trier : captures en premier
+  moves.sort((a, b) => (b.captured ? 1 : 0) - (a.captured ? 1 : 0));
+
+  let best = { score: maximizing ? -Infinity : Infinity, move: null };
+  for (const m of moves) {
+    game.move(m);
+    const result = minimax(game, depth - 1, alpha, beta, !maximizing);
+    game.undo();
+    if (maximizing) {
+      if (result.score > best.score) { best = { score: result.score, move: m }; }
+      alpha = Math.max(alpha, best.score);
+    } else {
+      if (result.score < best.score) { best = { score: result.score, move: m }; }
+      beta = Math.min(beta, best.score);
+    }
+    if (beta <= alpha) break;
+  }
+  return best;
+}
+
+// Trouver les N meilleurs coups
+function findBestMoves(fen, n) {
+  if (!Chess) throw new Error('chess.js non disponible');
+  const game = new Chess(fen);
+  if (game.game_over()) return [];
+
+  const isWhite = game.turn() === 'w';
+  const moves = game.moves({ verbose: true });
+  moves.sort((a, b) => (b.captured ? 1 : 0) - (a.captured ? 1 : 0));
+
   const results = [];
-  for (let i = 0; i < multiPV; i++) {
-    const line = lines[i];
-    if (!line || !line.moves || !line.moves[0]) continue;
-    const uci = line.moves[0];
-    if (uci.length < 4) continue;
-    results.push({
-      from:      uci.slice(0, 2),
-      to:        uci.slice(2, 4),
-      promotion: uci.length > 4 ? uci[4] : null,
-      uci,
-      score:     line.score,
-    });
+  for (const m of moves) {
+    game.move(m);
+    const result = minimax(game, 3, -Infinity, Infinity, !isWhite);
+    game.undo();
+    // Score du point de vue du joueur actif
+    const score = isWhite ? result.score : -result.score;
+    results.push({ from: m.from, to: m.to, uci: m.from+m.to+(m.promotion||''), score, promotion: m.promotion||null });
   }
-  // Fallback si MultiPV vide mais bestmove présent
-  if (!results.length && bestmove && bestmove.length >= 4) {
-    results.push({
-      from:      bestmove.slice(0, 2),
-      to:        bestmove.slice(2, 4),
-      promotion: bestmove.length > 4 ? bestmove[4] : null,
-      uci:       bestmove,
-      score:     0,
-    });
-  }
-  return results;
+
+  // Trier du meilleur au moins bon
+  results.sort((a, b) => b.score - a.score);
+  return results.slice(0, n);
 }
 
-// ── Handler principal ────────────────────────────────────
+// ── Handler principal ────────────────────────────────────────
 module.exports = async function handler(req, res) {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') {
-    return res.status(405).json({ ok: false, error: 'Method not allowed' });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'Method not allowed' });
 
-  // ── 1. Validation token ──────────────────────────────
-  const expectedToken = process.env.HINT_TOKEN;
-  if (!expectedToken) {
-    return res.status(500).json({ ok: false, error: 'HINT_TOKEN non configuré sur Vercel' });
-  }
-
-  const body = req.body || {};
-  const token = body.token || '';
-
-  if (!validateToken(token, expectedToken)) {
-    // Délai fixe pour éviter les attaques par force brute temporelle
+  // 1. Token
+  const expected = process.env.HINT_TOKEN;
+  if (!expected) return res.status(500).json({ ok: false, error: 'HINT_TOKEN non configuré' });
+  const token = (req.body || {}).token || '';
+  if (!validateToken(token, expected)) {
     await new Promise(r => setTimeout(r, 200));
     return res.status(401).json({ ok: false, error: 'Token invalide' });
   }
 
-  // ── 2. Validation FEN ────────────────────────────────
-  const fen = (body.fen || '').trim();
-  if (!isValidFen(fen)) {
-    return res.status(400).json({ ok: false, error: 'FEN invalide' });
-  }
+  // 2. FEN
+  const fen = ((req.body || {}).fen || '').trim();
+  if (!isValidFen(fen)) return res.status(400).json({ ok: false, error: 'FEN invalide' });
 
-  const n = Math.min(Math.max(parseInt(body.n) || 1, 1), 3); // 1 à 3 coups max
+  const n = Math.min(Math.max(parseInt((req.body||{}).n)||1, 1), 3);
 
-  // ── 3. Analyse Stockfish (max 2s pour rester sous 10s Vercel) ──
+  // 3. Analyse
   try {
-    const moves = await analyzeWithStockfish(fen, 2000, n);
-    if (!moves.length) {
-      return res.status(200).json({ ok: true, moves: [], info: 'Aucun coup légal' });
-    }
+    const moves = findBestMoves(fen, n);
     return res.status(200).json({ ok: true, moves });
-  } catch (err) {
-    return res.status(500).json({ ok: false, error: 'Erreur moteur: ' + err.message });
+  } catch(err) {
+    return res.status(500).json({ ok: false, error: err.message });
   }
 };
