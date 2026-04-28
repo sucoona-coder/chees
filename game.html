@@ -614,9 +614,9 @@ body.theme-light .more-item:hover{background:#e8e5de}
         <button class="more-item" onclick="downloadPGN();toggleMoreMenu()">⬇ Télécharger PGN</button>
         <button class="more-item" onclick="importPGN();toggleMoreMenu()">⬆ Importer PGN</button>
         <hr style="border:none;border-top:1px solid var(--border);margin:4px 0">
-        <button class="more-item" id="blindfold-item" onclick="toggleBlindFold();toggleMoreMenu()">👁 Mode Blindfold</button>
+        <button class="more-item" id="blindfold-btn" onclick="toggleBlindFold();toggleMoreMenu()">👁 Mode Blindfold</button>
         <button class="more-item" onclick="copyBoardSVG();toggleMoreMenu()">📷 Copier plateau SVG</button>
-        <button class="more-item" onclick="toggleMiniMode();toggleMoreMenu()">⊡ Plateau compact</button>
+        <button class="more-item" id="mini-btn" onclick="toggleMiniMode();toggleMoreMenu()">⊡ Plateau compact</button>
       </div>
     </div>
     <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Thème sombre/clair">🌙</button>
