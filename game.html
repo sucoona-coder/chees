@@ -1682,6 +1682,16 @@ function classifyFallbackByBestMove(fenBefore, move, isTheory){
   }catch(e){return null;}
 }
 
+function renderFallbackAnalysis(card, body, move, ann, evalBefore, evalAfter, fenBefore, isTheory){
+  var fbBest=classifyFallbackByBestMove(fenBefore,move,isTheory);
+  var annFallback=fbBest?fbBest.ann:classifyFallbackByEval(evalBefore,evalAfter,move,isTheory);
+  var pseudoDiff=fbBest?fbBest.diff:Math.max(0,Math.round(Math.abs((evalAfter-evalBefore))));
+  var pseudoAcc=fbBest?fbBest.acc:Math.max(45,Math.min(99,90-Math.round(pseudoDiff/12)));
+  renderAnalysis(card, body, move, annFallback, fbBest?fbBest.evalAfter:evalAfter, pseudoDiff, pseudoAcc, false);
+  pushAccuracy(move.color,pseudoAcc);
+  if(annFallback!==ann) showAnnotationOnSquare(move.to,annFallback);
+}
+
 function getMoveContext(move, ann, diff, evalAfterCp){
   var color=move.color==='w'?'Blancs':'Noirs';
   var adv=move.color==='w'?'Noirs':'Blancs';
@@ -1766,13 +1776,7 @@ async function requestAI(move, ann, evalBefore, evalAfter){
   var isTheory=isTheoreticalMove(move);
 
   if(!sfAnalReady){
-    var fbBest=classifyFallbackByBestMove(fenBefore,move,isTheory);
-    var annFallback=fbBest?fbBest.ann:classifyFallbackByEval(evalBefore,evalAfter,move,isTheory);
-    var pseudoDiff=fbBest?fbBest.diff:Math.max(0,Math.round(Math.abs((evalAfter-evalBefore))));
-    var pseudoAcc=fbBest?fbBest.acc:Math.max(45,Math.min(99,90-Math.round(pseudoDiff/12)));
-    renderAnalysis(card, body, move, annFallback, fbBest?fbBest.evalAfter:evalAfter, pseudoDiff, pseudoAcc, false);
-    pushAccuracy(move.color,pseudoAcc);
-    if(annFallback!==ann) showAnnotationOnSquare(move.to,annFallback);
+    renderFallbackAnalysis(card, body, move, ann, evalBefore, evalAfter, fenBefore, isTheory);
     aiRunning=false; return;
   }
 
@@ -1783,12 +1787,7 @@ async function requestAI(move, ann, evalBefore, evalAfter){
   if(myId!==analRequestId){ return; }
 
   if(sfBefore1===null||sfAfter1===null){
-    var fbBest2=classifyFallbackByBestMove(fenBefore,move,isTheory);
-    var annFallback2=fbBest2?fbBest2.ann:classifyFallbackByEval(evalBefore,evalAfter,move,isTheory);
-    var pseudoDiff2=fbBest2?fbBest2.diff:Math.max(0,Math.round(Math.abs((evalAfter-evalBefore))));
-    var pseudoAcc2=fbBest2?fbBest2.acc:Math.max(45,Math.min(99,90-Math.round(pseudoDiff2/12)));
-    renderAnalysis(card, body, move, annFallback2, fbBest2?fbBest2.evalAfter:evalAfter, pseudoDiff2, pseudoAcc2, false);
-    pushAccuracy(move.color,pseudoAcc2);
+    renderFallbackAnalysis(card, body, move, ann, evalBefore, evalAfter, fenBefore, isTheory);
     aiRunning=false; return;
   }
 
