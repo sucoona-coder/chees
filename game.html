@@ -888,6 +888,7 @@ body.theme-light .more-item:hover{background:#e8e5de}
 <button class="sound-fab" id="sound-fab" onclick="toggleSound()" title="Son">🔊</button>
 
 <script src="indices.js"></script>
+<script src="ai-infra.js"></script>
 <script>
 // ── Alias pour compatibilité (chess.xxx() dans le code) ──────
 // chess pointe toujours vers chess
@@ -1046,6 +1047,7 @@ var currentTheme='dark', blindfold=false, miniMode=false, autoFlip=false;
 var navSnaps=[], navCur=-1;
 var accW=[], accB=[], sess={p:0,w:0,d:0};
 var moveTimesArr=[], moveT0=null;
+var aiSearchGuard=(window.AIInfra&&window.AIInfra.createSearchGuard)?window.AIInfra.createSearchGuard():null;
 
 
 // ══════════════════════════════════════════════════════════
