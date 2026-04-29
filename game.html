@@ -1648,6 +1648,22 @@ function classifyByCpDiff(diff, move, moveNum, evalAfterCp, isTheory){
   return ANN.miss;
 }
 
+function classifyFallbackByEval(evalBefore, evalAfter, move, isTheory){
+  if(chess.in_checkmate()) return ANN.mate;
+  if(move.promotion) return ANN.promo;
+  if(move.san&&move.san.includes('O-O')) return ANN.castle;
+  if(isTheory) return ANN.theory;
+  var sign=move.color==='w'?1:-1;
+  var delta=(evalAfter-evalBefore)*sign;
+  if(delta>=120) return ANN.best;
+  if(delta>=40) return ANN.good;
+  if(delta>-40) return ANN.correct;
+  if(delta>-120) return ANN.inaccurate;
+  if(delta>-260) return ANN.mistake;
+  if(delta>-450) return ANN.blunder;
+  return ANN.miss;
+}
+
 function getMoveContext(move, ann, diff, evalAfterCp){
   var color=move.color==='w'?'Blancs':'Noirs';
   var adv=move.color==='w'?'Noirs':'Blancs';
@@ -1725,8 +1741,12 @@ async function requestAI(move, ann, evalBefore, evalAfter){
   body.innerHTML=loadingBadge+'<div class="thinking"><div class="dots"><span></span><span></span><span></span></div>&nbsp;Stockfish analyse…</div>';
 
   if(!sfAnalReady){
+    var annFallback=classifyFallbackByEval(evalBefore,evalAfter,move,isTheory);
+    var pseudoDiff=Math.max(0,Math.round(Math.abs((evalAfter-evalBefore))));
+    var pseudoAcc=Math.max(45,Math.min(99,90-Math.round(pseudoDiff/12)));
     card.className='analysis-card has-result';
-    body.innerHTML=loadingBadge+'<div class="analysis-body loaded">'+getMoveContext(move,ann,0,0)+'</div>';
+    body.innerHTML=loadingBadge+'<div class="analysis-body loaded">'+getMoveContext(move,annFallback,pseudoDiff,evalAfter)+'</div>';
+    if(annFallback!==ann) showAnnotationOnSquare(move.to,annFallback);
     aiRunning=false; return;
   }
 
@@ -1746,7 +1766,10 @@ async function requestAI(move, ann, evalBefore, evalAfter){
   if(myId!==analRequestId){ return; }
 
   if(sfBefore1===null||sfAfter1===null){
-    renderAnalysis(card, body, move, ANN.correct, 0, 0, 85, false);
+    var annFallback2=classifyFallbackByEval(evalBefore,evalAfter,move,isTheory);
+    var pseudoDiff2=Math.max(0,Math.round(Math.abs((evalAfter-evalBefore))));
+    var pseudoAcc2=Math.max(45,Math.min(99,90-Math.round(pseudoDiff2/12)));
+    renderAnalysis(card, body, move, annFallback2, evalAfter, pseudoDiff2, pseudoAcc2, false);
     aiRunning=false; return;
   }
 
