@@ -1035,7 +1035,7 @@ function updateOpeningDisplay(){
 var chess=new Chess();
 var gameMode='local', myColor='w';
 var evalHistory=[], lastMove=null, selSq=null, legalMoves=[];
-var boardFlipped=false, aiThinking=false, currentDiff=3;
+var boardFlipped=false, aiThinking=false, currentDiff=3, aiMoveTimer=null;
 var sfGame=null, sfGameReady=false, sfGameCallback=null, sfGameLines=[];
 var sfAnal=null, sfAnalReady=false, sfAnalCallback=null, sfAnalLines=[];
 var clocks={w:null,b:null}, clockInterval=null, currentTimeControl='unlimited';
@@ -1047,8 +1047,8 @@ var currentTheme='dark', blindfold=false, miniMode=false, autoFlip=false;
 var navSnaps=[], navCur=-1;
 var accW=[], accB=[], sess={p:0,w:0,d:0};
 var moveTimesArr=[], moveT0=null;
-var aiScheduler=(window.AIInfra&&window.AIInfra.createMoveScheduler)?window.AIInfra.createMoveScheduler():{schedule:function(fn,d){setTimeout(fn,d);},clear:function(){},pending:function(){return false;}};
-var aiSearchGuard=(window.AIInfra&&window.AIInfra.createSearchGuard)?window.AIInfra.createSearchGuard():{next:function(s){return{id:Date.now(),snapshot:s};},isCurrent:function(){return true;}};
+var aiScheduler=(window.AIInfra&&window.AIInfra.createMoveScheduler)?window.AIInfra.createMoveScheduler():null;
+var aiSearchGuard=(window.AIInfra&&window.AIInfra.createSearchGuard)?window.AIInfra.createSearchGuard():null;
 
 
 // ══════════════════════════════════════════════════════════
@@ -1372,13 +1372,9 @@ async function playAIMove(){
       if(d.elo<=2200){sfGameSend('setoption name UCI_LimitStrength value true');sfGameSend(`setoption name UCI_Elo value ${d.elo}`);}
       else sfGameSend('setoption name UCI_LimitStrength value false');
     }
-    const snapshot={mode:gameMode,turn:chess.turn(),fen:chess.fen()};
-    const ticket=aiSearchGuard.next(snapshot);
-    const results=await sfSearch(snapshot.fen,d.movetime,1);
-    var stillValid=(window.AIInfra&&window.AIInfra.shouldApplySearchResult)
-      ? window.AIInfra.shouldApplySearchResult({mode:gameMode,turn:chess.turn(),fen:chess.fen(),gameOver:chess.game_over()}, ticket.snapshot)
-      : (gameMode==='ai'&&!chess.game_over()&&chess.turn()==='b'&&chess.fen()===snapshot.fen);
-    if(!aiSearchGuard.isCurrent(ticket)||!stillValid){
+    const fenAtStart=chess.fen();
+    const results=await sfSearch(fenAtStart,d.movetime,1);
+    if(gameMode!=='ai'||chess.game_over()||chess.turn()!=='b'||chess.fen()!==fenAtStart){
       clearInterval(iv);depthRow.style.display='none';aiThinking=false;return;
     }
     clearInterval(iv);depthBar.style.width='100%';
@@ -1879,7 +1875,10 @@ async function onSqClick(sq){
       render();showAnnotationOnSquare(move.to,ann);updateAll();updateThreatBar();
       requestAI(move,ann,evalBefore,evalAfter);startClock();checkAutoFlip();startMoveTimer();
       if(gameMode==='online'&&peer&&conn&&conn.open)conn.send({type:'move',from:move.from,to:move.to,promotion:promo});
-      if(gameMode==='ai'&&!chess.game_over()){aiScheduler.schedule(playAIMove,300);}
+      if(gameMode==='ai'&&!chess.game_over()){
+        if(aiScheduler) aiScheduler.schedule(playAIMove,300);
+        else { if(aiMoveTimer)clearTimeout(aiMoveTimer);aiMoveTimer=setTimeout(function(){aiMoveTimer=null;playAIMove();},300); }
+      }
       return;
     }
     if(piece&&piece.color===chess.turn()){selSq=sq;legalMoves=chess.moves({square:sq,verbose:true});sndSelect();render();return;}
@@ -1898,7 +1897,10 @@ function playTheoryMove(san){
   if(chess.in_check())sndCheck();else if(theory)sndTheory();else sndMove();
   render();showAnnotationOnSquare(move.to,ann);updateAll();requestAI(move,ann,evalBefore,evalAfter);startClock();
   if(gameMode==='online'&&peer&&conn&&conn.open)conn.send({type:'move',from:move.from,to:move.to,promotion:'q'});
-  if(gameMode==='ai'&&!chess.game_over()){aiScheduler.schedule(playAIMove,300);}
+  if(gameMode==='ai'&&!chess.game_over()){
+    if(aiScheduler) aiScheduler.schedule(playAIMove,300);
+    else { if(aiMoveTimer)clearTimeout(aiMoveTimer);aiMoveTimer=setTimeout(function(){aiMoveTimer=null;playAIMove();},300); }
+  }
 }
 
 // ══════════════════════════════════════════════════════════
@@ -2040,7 +2042,8 @@ function startGame(mode){
   }
   gameMode=mode;chess=new Chess();
   selSq=null;legalMoves=[];lastMove=null;aiRunning=false;evalHistory=[];aiThinking=false;
-  aiScheduler.clear();
+  if(aiScheduler) aiScheduler.clear();
+  if(aiMoveTimer){clearTimeout(aiMoveTimer);aiMoveTimer=null;}
   navReset();resetAccuracy();resetMoveTimer();blindfold=false;document.body.classList.remove('blindfold');
   var bfb=document.getElementById('blindfold-btn');if(bfb){bfb.textContent='👁';bfb.style.color='';}
   document.querySelectorAll('.sq-ann').forEach(e=>e.remove());
@@ -2387,7 +2390,8 @@ function edStartFromPosition(){
   // Lancer le jeu depuis cette position
   gameMode='editor'; chess=testChess;
   selSq=null;legalMoves=[];lastMove=null;aiRunning=false;evalHistory=[];aiThinking=false;
-  aiScheduler.clear();
+  if(aiScheduler) aiScheduler.clear();
+  if(aiMoveTimer){clearTimeout(aiMoveTimer);aiMoveTimer=null;}
   cancelAnalysis();
   document.querySelectorAll('.sq-ann').forEach(function(e){e.remove();});
   var cm=document.getElementById('chat-messages'); if(cm)cm.innerHTML='';
