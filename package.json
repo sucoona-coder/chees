@@ -5,7 +5,6 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "node --test tests-api.mjs",
-    "test:all": "node --test tests-api.mjs tests-ai-infra.mjs"
+    "test": "node --test tests-api.mjs"
   }
 }

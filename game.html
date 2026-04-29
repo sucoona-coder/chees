@@ -1047,7 +1047,6 @@ var currentTheme='dark', blindfold=false, miniMode=false, autoFlip=false;
 var navSnaps=[], navCur=-1;
 var accW=[], accB=[], sess={p:0,w:0,d:0};
 var moveTimesArr=[], moveT0=null;
-var aiScheduler=(window.AIInfra&&window.AIInfra.createMoveScheduler)?window.AIInfra.createMoveScheduler():null;
 var aiSearchGuard=(window.AIInfra&&window.AIInfra.createSearchGuard)?window.AIInfra.createSearchGuard():null;
 
 
@@ -1875,10 +1874,7 @@ async function onSqClick(sq){
       render();showAnnotationOnSquare(move.to,ann);updateAll();updateThreatBar();
       requestAI(move,ann,evalBefore,evalAfter);startClock();checkAutoFlip();startMoveTimer();
       if(gameMode==='online'&&peer&&conn&&conn.open)conn.send({type:'move',from:move.from,to:move.to,promotion:promo});
-      if(gameMode==='ai'&&!chess.game_over()){
-        if(aiScheduler) aiScheduler.schedule(playAIMove,300);
-        else { if(aiMoveTimer)clearTimeout(aiMoveTimer);aiMoveTimer=setTimeout(function(){aiMoveTimer=null;playAIMove();},300); }
-      }
+      if(gameMode==='ai'&&!chess.game_over()){if(aiMoveTimer)clearTimeout(aiMoveTimer);aiMoveTimer=setTimeout(function(){aiMoveTimer=null;playAIMove();},300);}
       return;
     }
     if(piece&&piece.color===chess.turn()){selSq=sq;legalMoves=chess.moves({square:sq,verbose:true});sndSelect();render();return;}
@@ -1897,10 +1893,7 @@ function playTheoryMove(san){
   if(chess.in_check())sndCheck();else if(theory)sndTheory();else sndMove();
   render();showAnnotationOnSquare(move.to,ann);updateAll();requestAI(move,ann,evalBefore,evalAfter);startClock();
   if(gameMode==='online'&&peer&&conn&&conn.open)conn.send({type:'move',from:move.from,to:move.to,promotion:'q'});
-  if(gameMode==='ai'&&!chess.game_over()){
-    if(aiScheduler) aiScheduler.schedule(playAIMove,300);
-    else { if(aiMoveTimer)clearTimeout(aiMoveTimer);aiMoveTimer=setTimeout(function(){aiMoveTimer=null;playAIMove();},300); }
-  }
+  if(gameMode==='ai'&&!chess.game_over()){if(aiMoveTimer)clearTimeout(aiMoveTimer);aiMoveTimer=setTimeout(function(){aiMoveTimer=null;playAIMove();},300);}
 }
 
 // ══════════════════════════════════════════════════════════
@@ -2042,7 +2035,6 @@ function startGame(mode){
   }
   gameMode=mode;chess=new Chess();
   selSq=null;legalMoves=[];lastMove=null;aiRunning=false;evalHistory=[];aiThinking=false;
-  if(aiScheduler) aiScheduler.clear();
   if(aiMoveTimer){clearTimeout(aiMoveTimer);aiMoveTimer=null;}
   navReset();resetAccuracy();resetMoveTimer();blindfold=false;document.body.classList.remove('blindfold');
   var bfb=document.getElementById('blindfold-btn');if(bfb){bfb.textContent='👁';bfb.style.color='';}
@@ -2390,7 +2382,6 @@ function edStartFromPosition(){
   // Lancer le jeu depuis cette position
   gameMode='editor'; chess=testChess;
   selSq=null;legalMoves=[];lastMove=null;aiRunning=false;evalHistory=[];aiThinking=false;
-  if(aiScheduler) aiScheduler.clear();
   if(aiMoveTimer){clearTimeout(aiMoveTimer);aiMoveTimer=null;}
   cancelAnalysis();
   document.querySelectorAll('.sq-ann').forEach(function(e){e.remove();});
