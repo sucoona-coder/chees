@@ -888,6 +888,7 @@ body.theme-light .more-item:hover{background:#e8e5de}
 <button class="sound-fab" id="sound-fab" onclick="toggleSound()" title="Son">🔊</button>
 
 <script src="indices.js"></script>
+<script src="ai-infra.js"></script>
 <script>
 // ── Alias pour compatibilité (chess.xxx() dans le code) ──────
 // chess pointe toujours vers chess
@@ -1034,7 +1035,7 @@ function updateOpeningDisplay(){
 var chess=new Chess();
 var gameMode='local', myColor='w';
 var evalHistory=[], lastMove=null, selSq=null, legalMoves=[];
-var boardFlipped=false, aiThinking=false, currentDiff=3;
+var boardFlipped=false, aiThinking=false, currentDiff=3, aiMoveTimer=null;
 var sfGame=null, sfGameReady=false, sfGameCallback=null, sfGameLines=[];
 var sfAnal=null, sfAnalReady=false, sfAnalCallback=null, sfAnalLines=[];
 var clocks={w:null,b:null}, clockInterval=null, currentTimeControl='unlimited';
@@ -1046,6 +1047,7 @@ var currentTheme='dark', blindfold=false, miniMode=false, autoFlip=false;
 var navSnaps=[], navCur=-1;
 var accW=[], accB=[], sess={p:0,w:0,d:0};
 var moveTimesArr=[], moveT0=null;
+var aiSearchGuard=(window.AIInfra&&window.AIInfra.createSearchGuard)?window.AIInfra.createSearchGuard():null;
 
 
 // ══════════════════════════════════════════════════════════
@@ -1267,12 +1269,24 @@ function setDifficulty(level){
 // Recherche coup via Worker JEU
 function sfSearch(fen, movetime, multiPV=1){
   return new Promise(resolve=>{
+    var done=false;
+    var timeout=setTimeout(function(){
+      if(done) return;
+      done=true;
+      sfGameCallback=null;
+      resolve(negamaxSearch(fen,4,multiPV));
+    }, Math.max(1200, (movetime||300)+2500));
     if(!sfGameReady||!sfGame){
+      clearTimeout(timeout);
+      done=true;
       resolve(negamaxSearch(fen,4,multiPV));
       return;
     }
     sfGameLines=[];
     sfGameCallback=(best,lines)=>{
+      if(done) return;
+      done=true;
+      clearTimeout(timeout);
       const results=(lines||[]).filter(l=>l&&l.moves&&l.moves.length>0).map(l=>{
         const m=uciToMove(l.moves[0]);
         if(!m)return null;
@@ -1357,7 +1371,11 @@ async function playAIMove(){
       if(d.elo<=2200){sfGameSend('setoption name UCI_LimitStrength value true');sfGameSend(`setoption name UCI_Elo value ${d.elo}`);}
       else sfGameSend('setoption name UCI_LimitStrength value false');
     }
-    const results=await sfSearch(chess.fen(),d.movetime,1);
+    const fenAtStart=chess.fen();
+    const results=await sfSearch(fenAtStart,d.movetime,1);
+    if(gameMode!=='ai'||chess.game_over()||chess.turn()!=='b'||chess.fen()!==fenAtStart){
+      clearInterval(iv);depthRow.style.display='none';aiThinking=false;return;
+    }
     clearInterval(iv);depthBar.style.width='100%';
     setTimeout(()=>{depthRow.style.display='none';depthBar.style.width='0%';},350);
     if(!results.length){aiThinking=false;return;}
@@ -1630,6 +1648,40 @@ function classifyByCpDiff(diff, move, moveNum, evalAfterCp, isTheory){
   return ANN.miss;
 }
 
+function classifyFallbackByEval(evalBefore, evalAfter, move, isTheory){
+  if(chess.in_checkmate()) return ANN.mate;
+  if(move.promotion) return ANN.promo;
+  if(move.san&&move.san.includes('O-O')) return ANN.castle;
+  if(isTheory) return ANN.theory;
+  var sign=move.color==='w'?1:-1;
+  var delta=(evalAfter-evalBefore)*sign;
+  if(delta>=120) return ANN.best;
+  if(delta>=40) return ANN.good;
+  if(delta>-40) return ANN.correct;
+  if(delta>-120) return ANN.inaccurate;
+  if(delta>-260) return ANN.mistake;
+  if(delta>-450) return ANN.blunder;
+  return ANN.miss;
+}
+
+function classifyFallbackByBestMove(fenBefore, move, isTheory){
+  try{
+    var best=negamaxSearch(fenBefore, 3, 1);
+    if(!best||!best.length) return null;
+    var bestScore=best[0].score||0;
+    var tmp=new Chess(fenBefore);
+    var played=tmp.move({from:move.from,to:move.to,promotion:move.promotion||'q'});
+    if(!played) return null;
+    var playedScore=evalChess(tmp);
+    var sign=move.color==='w'?1:-1;
+    var playedFromMoverPOV=playedScore*sign;
+    var diff=Math.max(0,Math.round(bestScore-playedFromMoverPOV));
+    var ann=classifyByCpDiff(diff, move, 0, playedFromMoverPOV, isTheory);
+    var acc=Math.max(35,Math.min(99,95-Math.round(diff/12)));
+    return {ann:ann,diff:diff,acc:acc,evalAfter:playedScore};
+  }catch(e){return null;}
+}
+
 function getMoveContext(move, ann, diff, evalAfterCp){
   var color=move.color==='w'?'Blancs':'Noirs';
   var adv=move.color==='w'?'Noirs':'Blancs';
@@ -1706,20 +1758,23 @@ async function requestAI(move, ann, evalBefore, evalAfter){
   var loadingBadge='<div class="ann-header"><div class="ann-symbol" style="background:'+ann.bg+';color:'+ann.fg+'">'+(ann.sym||'·')+'</div><div><div class="ann-move-name">'+move.san+'</div><div class="ann-label">'+ann.label+'</div></div></div>';
   body.innerHTML=loadingBadge+'<div class="thinking"><div class="dots"><span></span><span></span><span></span></div>&nbsp;Stockfish analyse…</div>';
 
-  if(!sfAnalReady){
-    card.className='analysis-card has-result';
-    body.innerHTML=loadingBadge+'<div class="analysis-body loaded">'+getMoveContext(move,ann,0,0)+'</div>';
-    aiRunning=false; return;
-  }
-
   var hist=chess.history({verbose:true});
   var tmpBefore=new Chess();
   hist.slice(0,-1).forEach(function(m){ tmpBefore.move(m); });
   var fenBefore=tmpBefore.fen();
   var fenAfter=chess.fen();
-  // Capturer isTheory MAINTENANT (avant les await) pour éviter que
-  // l'historique change pendant l'analyse asynchrone
   var isTheory=isTheoreticalMove(move);
+
+  if(!sfAnalReady){
+    var fbBest=classifyFallbackByBestMove(fenBefore,move,isTheory);
+    var annFallback=fbBest?fbBest.ann:classifyFallbackByEval(evalBefore,evalAfter,move,isTheory);
+    var pseudoDiff=fbBest?fbBest.diff:Math.max(0,Math.round(Math.abs((evalAfter-evalBefore))));
+    var pseudoAcc=fbBest?fbBest.acc:Math.max(45,Math.min(99,90-Math.round(pseudoDiff/12)));
+    renderAnalysis(card, body, move, annFallback, fbBest?fbBest.evalAfter:evalAfter, pseudoDiff, pseudoAcc, false);
+    pushAccuracy(move.color,pseudoAcc);
+    if(annFallback!==ann) showAnnotationOnSquare(move.to,annFallback);
+    aiRunning=false; return;
+  }
 
   // PASSE 1 rapide
   var sfBefore1=await sfEval(fenBefore, 200);
@@ -1728,7 +1783,12 @@ async function requestAI(move, ann, evalBefore, evalAfter){
   if(myId!==analRequestId){ return; }
 
   if(sfBefore1===null||sfAfter1===null){
-    renderAnalysis(card, body, move, ANN.correct, 0, 0, 85, false);
+    var fbBest2=classifyFallbackByBestMove(fenBefore,move,isTheory);
+    var annFallback2=fbBest2?fbBest2.ann:classifyFallbackByEval(evalBefore,evalAfter,move,isTheory);
+    var pseudoDiff2=fbBest2?fbBest2.diff:Math.max(0,Math.round(Math.abs((evalAfter-evalBefore))));
+    var pseudoAcc2=fbBest2?fbBest2.acc:Math.max(45,Math.min(99,90-Math.round(pseudoDiff2/12)));
+    renderAnalysis(card, body, move, annFallback2, fbBest2?fbBest2.evalAfter:evalAfter, pseudoDiff2, pseudoAcc2, false);
+    pushAccuracy(move.color,pseudoAcc2);
     aiRunning=false; return;
   }
 
@@ -1856,7 +1916,7 @@ async function onSqClick(sq){
       render();showAnnotationOnSquare(move.to,ann);updateAll();updateThreatBar();
       requestAI(move,ann,evalBefore,evalAfter);startClock();checkAutoFlip();startMoveTimer();
       if(gameMode==='online'&&peer&&conn&&conn.open)conn.send({type:'move',from:move.from,to:move.to,promotion:promo});
-      if(gameMode==='ai'&&!chess.game_over())setTimeout(playAIMove,300);
+      if(gameMode==='ai'&&!chess.game_over()){if(aiMoveTimer)clearTimeout(aiMoveTimer);aiMoveTimer=setTimeout(function(){aiMoveTimer=null;playAIMove();},300);}
       return;
     }
     if(piece&&piece.color===chess.turn()){selSq=sq;legalMoves=chess.moves({square:sq,verbose:true});sndSelect();render();return;}
@@ -1875,7 +1935,7 @@ function playTheoryMove(san){
   if(chess.in_check())sndCheck();else if(theory)sndTheory();else sndMove();
   render();showAnnotationOnSquare(move.to,ann);updateAll();requestAI(move,ann,evalBefore,evalAfter);startClock();
   if(gameMode==='online'&&peer&&conn&&conn.open)conn.send({type:'move',from:move.from,to:move.to,promotion:'q'});
-  if(gameMode==='ai'&&!chess.game_over())setTimeout(playAIMove,300);
+  if(gameMode==='ai'&&!chess.game_over()){if(aiMoveTimer)clearTimeout(aiMoveTimer);aiMoveTimer=setTimeout(function(){aiMoveTimer=null;playAIMove();},300);}
 }
 
 // ══════════════════════════════════════════════════════════
@@ -2017,6 +2077,7 @@ function startGame(mode){
   }
   gameMode=mode;chess=new Chess();
   selSq=null;legalMoves=[];lastMove=null;aiRunning=false;evalHistory=[];aiThinking=false;
+  if(aiMoveTimer){clearTimeout(aiMoveTimer);aiMoveTimer=null;}
   navReset();resetAccuracy();resetMoveTimer();blindfold=false;document.body.classList.remove('blindfold');
   var bfb=document.getElementById('blindfold-btn');if(bfb){bfb.textContent='👁';bfb.style.color='';}
   document.querySelectorAll('.sq-ann').forEach(e=>e.remove());
@@ -2363,6 +2424,7 @@ function edStartFromPosition(){
   // Lancer le jeu depuis cette position
   gameMode='editor'; chess=testChess;
   selSq=null;legalMoves=[];lastMove=null;aiRunning=false;evalHistory=[];aiThinking=false;
+  if(aiMoveTimer){clearTimeout(aiMoveTimer);aiMoveTimer=null;}
   cancelAnalysis();
   document.querySelectorAll('.sq-ann').forEach(function(e){e.remove();});
   var cm=document.getElementById('chat-messages'); if(cm)cm.innerHTML='';
