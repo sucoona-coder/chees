@@ -1,5 +1,10 @@
 {
   "name": "chessmaster-pro",
   "version": "1.0.0",
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test tests-api.mjs tests-ai-infra.mjs"
+  }
 }

@@ -1,6 +1,6 @@
 // hint.js — ChessMaster Pro · Mode Indices
 // Ce fichier ne contient AUCUNE logique d'analyse locale.
-// Tout passe par /api/hint (Stockfish côté serveur).
+// Tout passe par /api/indices (Stockfish côté serveur).
 // Le token n'est jamais comparé ici — uniquement envoyé au serveur.
 
 (function() {
@@ -15,7 +15,7 @@
   function initHintMode() {
     if (_hintInitDone) return;
     var params = new URLSearchParams(location.search);
-    var tok = params.get('hint');
+    var tok = params.get('hint') || params.get('token');
     if (!tok) return;
     // Vérifier le token côté serveur avant d'activer quoi que ce soit
     verifyToken(tok).then(function(ok) {
@@ -29,7 +29,7 @@
 
   // Appel de vérification — le serveur valide avec timingSafeEqual
   function verifyToken(tok) {
-    return fetch('/api/hint', {
+    return fetch('/api/indices', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -85,7 +85,7 @@
   function callAPI(n) {
     if (!hintMode || !hintToken) return Promise.reject(new Error('Non initialisé'));
     if (typeof chess === 'undefined' || chess.game_over()) return Promise.reject(new Error('Partie terminée'));
-    return fetch('/api/hint', {
+    return fetch('/api/indices', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: hintToken, fen: chess.fen(), n: n })
